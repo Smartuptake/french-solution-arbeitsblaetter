@@ -16,9 +16,14 @@
   --bg:#10162A; --panel:#18203A; --fg:#E8ECF7; --muted:#A3ACC8; --line:#2C3656;
   --navy:#9FB2F0; --rouge:#FF6B70; --clair:#222C4D; --paper:#FFFFFF; --desk:#0B1022; --ok:#5BD08E; color-scheme:dark}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:14px}
+body[data-fach="mm"]{--navy:#02736F;--rouge:#039A9A;--clair:#E6F5F5;--display:'Helvetica Neue',Helvetica,Arial,sans-serif;--body:'Helvetica Neue',Helvetica,Arial,'Noto Sans',sans-serif}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) body[data-fach="mm"]{--navy:#6FD6D2;--rouge:#6FD6D2;--clair:#173B3C}}
+:root[data-theme="dark"] body[data-fach="mm"]{--navy:#6FD6D2;--rouge:#6FD6D2;--clair:#173B3C}
+@font-face{font-family:'MM Kai';src:url(assets/fonts/MMKai-gb2312.ttf) format('truetype');font-display:swap}
 *{box-sizing:border-box}
 .top{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));border-bottom:1px solid var(--line);background:var(--panel)}
 .top h1{font-family:var(--display);font-weight:600;font-size:20px;margin:0;color:var(--navy)}
+.top h1 b{font-weight:600}
 .top h1 span{color:var(--rouge)}
 .fach{display:flex;gap:4px;background:var(--clair);border-radius:8px;padding:3px}
 .fach button{font:inherit;font-weight:700;border:0;border-radius:6px;padding:5px 12px;background:transparent;color:var(--muted);cursor:pointer}
@@ -90,11 +95,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--navy);width:16px;heigh
 <style id="blattcss"></style>
 
 <header class="top">
-  <h1>Arbeitsblatt-Generator <span>·</span> French Solution</h1>
-  <div class="fach" role="group" aria-label="Fach">
-    <button type="button" id="fach-fs" aria-pressed="true">Französisch</button>
-    <button type="button" id="fach-mm" aria-pressed="false" disabled title="Mandarin Maverick folgt (Kursverlauf 006-3)">Chinesisch · folgt</button>
-  </div>
+  <h1>Arbeitsblatt-Generator <span>·</span> <b id="marke">French Solution</b></h1>
   <span class="st" id="speicherstand">Sammlung wird geladen …</span>
 </header>
 
@@ -125,10 +126,10 @@ input[type=checkbox],input[type=radio]{accent-color:var(--navy);width:16px;heigh
     <details class="abs" open>
       <summary><span class="nr">2</span><b>Bevor du startest</b><small>Aufgabe, Ziel, Sozialform, Medium, KI, Methode</small></summary>
       <div class="felder">
-        <label class="f breit"><span>Aufgabenstellung <em>Französisch</em></span><textarea id="a-fr" data-k="aufgabe.fr"></textarea></label>
+        <label class="f breit"><span>Aufgabenstellung <em class="zs-name">Französisch</em></span><textarea id="a-fr" data-k="aufgabe.fr"></textarea></label>
         <label class="f breit"><span>Aufgabenstellung <em>Deutsch</em></span><textarea id="a-de" data-k="aufgabe.de"></textarea></label>
         <div class="f"><span>Art</span><div class="wahl"><label><input type="radio" name="a-art" id="a-art-p" data-k="aufgabe.art" value="pflicht"> Pflicht</label><label><input type="radio" name="a-art" id="a-art-w" data-k="aufgabe.art" value="wahl"> Wahl</label></div></div>
-        <label class="f breit"><span>Lernziel als Können-Satz <em>Französisch</em></span><input type="text" id="z-fr" data-k="lernziel.fr" placeholder="Je peux …"></label>
+        <label class="f breit"><span>Lernziel als Können-Satz <em class="zs-name">Französisch</em></span><input type="text" id="z-fr" data-k="lernziel.fr" placeholder="Je peux …"></label>
         <label class="f breit"><span>Lernziel <em>Deutsch</em></span><input type="text" id="z-de" data-k="lernziel.de" placeholder="Ich kann …"></label>
         <div class="f"><span>Sozialform</span><div class="wahl" id="w-sozial"></div></div>
         <div class="f"><span>analog / digital</span><div class="wahl" id="w-medium"></div></div>
@@ -203,19 +204,31 @@ input[type=checkbox],input[type=radio]{accent-color:var(--navy);width:16px;heigh
   const B = window.FSBlatt;
   $('blattcss').textContent = B.CSS;
 
-  const ICONS = ['ablauf','achtung','audio-aufnehmen','audio-hochladen','aussprache','bild-zuordnen','checkliste','dialog-schreiben','dialog','diktat','diskussion','dokument','erklaeren','fakten-finden','falsch','feedback','fehler-finden','frage-antwort','fragen-beantworten','genau-lesen','gruppe','gruppieren','hausaufgabe','hoeren','hoerverstehen','idee','inhalt-wiedergeben','karteikarte','ki','korrigieren','lernplan','lernziel','lesen','loesung','luecken-fuellen','melden','mindmap','multiple-choice','nachdenken','notizen','passt-nicht','praesentation','pro-contra','quiz','rede-halten','rede-schreiben','reihenfolge','richtig-falsch','satz-bilden','schreiben','single-choice','skizze-zeichnen','sprechen','test','titel-finden','tutorial','uebersetzen','video-anschauen','video-aufnehmen','vorlesen','woerter-sammeln','woerterbuch','zeitlimit','zuhoeren','zuordnen'];
+  // Fach dieses Generators: 'fs' (French Solution) oder 'mm' (Mandarin Maverick) – beim Veröffentlichen gesetzt
+  const FACH = 'fs';
+  const MM = FACH === 'mm', PRE = MM ? 'mm' : 'fs', ZS = MM ? 'Chinesisch (optional)' : 'Französisch';
+  document.body.dataset.fach = FACH;
+  if (MM) { $('marke').textContent = 'Mandarin Maverick'; document.querySelectorAll('.zs-name').forEach(e => e.textContent = 'Chinesisch (optional)'); $('z-fr').placeholder = '我会 …'; }
+  const ICONS_MM = ['pinyin', 'radikale', 'schriftzeichen', 'toene'];
+  const ICONS = ['ablauf','achtung','audio-aufnehmen','audio-hochladen','aussprache','bild-zuordnen','checkliste','dialog-schreiben','dialog','diktat','diskussion','dokument','erklaeren','fakten-finden','falsch','feedback','fehler-finden','frage-antwort','fragen-beantworten','genau-lesen','gruppe','gruppieren','hausaufgabe','hoeren','hoerverstehen','idee','inhalt-wiedergeben','karteikarte','ki','korrigieren','lernplan','lernziel','lesen','loesung','luecken-fuellen','melden','mindmap','multiple-choice','nachdenken','notizen','passt-nicht','praesentation','pro-contra','quiz','rede-halten','rede-schreiben','reihenfolge','richtig-falsch','satz-bilden','schreiben','single-choice','skizze-zeichnen','sprechen','test','titel-finden','tutorial','uebersetzen','video-anschauen','video-aufnehmen','vorlesen','woerter-sammeln','woerterbuch','zeitlimit','zuhoeren','zuordnen'].concat(MM ? ICONS_MM : []).sort();
   const iconName = s => s.replace(/ae/g, 'ä').replace(/oe/g, 'ö').replace(/ue/g, 'ü').replace(/-/g, ' ').replace(/^./, c => c.toUpperCase());
-  const TYPEN = { luecken: 'Lücken füllen', zuordnen: 'Zuordnen', uebersetzen: 'Übersetzen', fragen: 'Fragen beantworten', schreiben: 'Text schreiben', frei: 'Freie Aufgabe' };
+  const TYPEN = Object.assign({ luecken: 'Lücken füllen', zuordnen: 'Zuordnen', uebersetzen: 'Übersetzen', fragen: 'Fragen beantworten', schreiben: 'Text schreiben', frei: 'Freie Aufgabe' }, MM ? { zeichen: 'Schriftzeichen üben' } : {});
   const DATEN_HILFE = {
     luecken: 'Ein Satz pro Zeile. Lücke als {{Lösung}}, Varianten mit | trennen.',
     zuordnen: 'Ein Paar pro Zeile: links = rechts. Rechts wird automatisch gemischt.',
     uebersetzen: 'Eine Aufgabe pro Zeile: Vorlage = Lösung.',
     fragen: 'Eine Frage pro Zeile: Frage = Musterantwort.',
     schreiben: 'Checkliste: ein Punkt pro Zeile.',
-    frei: 'Text der Aufgabe.'
+    frei: 'Text der Aufgabe.',
+    zeichen: 'Ein Zeichen pro Zeile: Zeichen = Pinyin = Bedeutung.'
   };
+  if (MM) Object.assign(DATEN_HILFE, {
+    luecken: 'Ein Satz pro Zeile: Hanzi || Pinyin || Deutsch. Lücke als {{Lösung}} (auch im Pinyin), Varianten mit |.',
+    uebersetzen: 'Eine Aufgabe pro Zeile: Vorlage = Lösung. Lösung gern als Hanzi || Pinyin.',
+    fragen: 'Eine Frage pro Zeile: Frage = Musterantwort (Hanzi || Pinyin).'
+  });
 
-  const LEER = () => ({ id: 'fs-' + Date.now().toString(36), fach: 'fs', titel: 'Neues Arbeitsblatt', lernjahr: 3, klasse: '', thema: '', zeit: '45 min',
+  const LEER = () => ({ id: PRE + '-' + Date.now().toString(36), fach: FACH, titel: 'Neues Arbeitsblatt', lernjahr: MM ? 2 : 3, klasse: '', thema: '', zeit: '45 min',
     aufgabe: { fr: '', de: '', art: 'pflicht' }, lernziel: { fr: '', de: '' }, sozial: ['einzel'], medium: ['analog'], ki: 'verboten', methode: '',
     abgabe: { format: '', termin: '' }, praesentation: ['keine'], kriterien: ['vollständig, ordentlich, pünktlich'], bewertung: { arten: ['feedback'], raster: [] },
     uebungen: [], reflexion: { prozess: true, ergebnis: true }, evaluation: true, weiter: '' });
@@ -223,7 +236,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--navy);width:16px;heigh
   let sheet = LEER(), db = null, sample = null, downloads = null, blaetter = [], modus = 'druck', speicherTimer = null, renderTimer = null;
   // Lokaler Modus (z. B. auf GitHub Pages): Sammlung im Browser, Dateien per normalem Download, keine Vorschläge
   let lokal = false;
-  const LK = 'fsgen-blaetter';
+  const LK = PRE + 'gen-blaetter';
   const lokalLesen = () => { try { return JSON.parse(localStorage.getItem(LK) || '[]'); } catch (e) { return []; } };
   const lokalSchreiben = l => { try { localStorage.setItem(LK, JSON.stringify(l)); return true; } catch (e) { return false; } };
 
@@ -284,6 +297,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--navy);width:16px;heigh
     if (u.typ === 'zuordnen') return (d.paare || []).map(p => p.join(' = ')).join('\n');
     if (u.typ === 'uebersetzen' || u.typ === 'fragen') return (d.saetze || []).map(p => p.join(' = ')).join('\n');
     if (u.typ === 'schreiben') return (d.checkliste || []).join('\n');
+    if (u.typ === 'zeichen') return (d.zeichen || []).map(z => z.join(' = ')).join('\n');
     return d.text || '';
   }
   function datenParse(u, text) {
@@ -293,23 +307,26 @@ input[type=checkbox],input[type=radio]{accent-color:var(--navy);width:16px;heigh
     else if (u.typ === 'zuordnen') { d.paare = zeilen.map(paar); delete d.mischung; }
     else if (u.typ === 'uebersetzen' || u.typ === 'fragen') d.saetze = zeilen.map(paar);
     else if (u.typ === 'schreiben') d.checkliste = zeilen;
+    else if (u.typ === 'zeichen') d.zeichen = zeilen.map(z => z.split(' = ').map(x => x.trim()));
     else d.text = text;
   }
   function uebungenZeichnen() {
     const ue = sheet.uebungen || (sheet.uebungen = []);
     $('uebungen').innerHTML = ue.map((u, i) => {
       const d = u.daten || {}, mitZeilen = ['uebersetzen', 'fragen', 'schreiben', 'frei'].includes(u.typ);
-      return `<div class="ue-karte"><div class="ue-kopf"><span class="n">${i + 1}</span><img src="assets/icons/fs-icon-${esc(u.icon || B.UEBUNGSTYPEN[u.typ])}.png" alt="">`
+      return `<div class="ue-karte"><div class="ue-kopf"><span class="n">${i + 1}</span><img src="assets/icons/${PRE}-icon-${esc(u.icon || B.UEBUNGSTYPEN[u.typ])}.png" alt="">`
         + `<select id="u${i}-typ" data-u="${i}" data-uk="typ" aria-label="Übungstyp">${Object.entries(TYPEN).map(([k, l]) => `<option value="${k}"${u.typ === k ? ' selected' : ''}>${l}</option>`).join('')}</select>`
         + `<select id="u${i}-icon" data-u="${i}" data-uk="icon" aria-label="Icon">${ICONS.map(n => `<option value="${n}"${(u.icon || B.UEBUNGSTYPEN[u.typ]) === n ? ' selected' : ''}>${iconName(n)}</option>`).join('')}</select>`
         + `<span class="sp"></span><button type="button" class="btn klein zw" data-ue-hoch="${i}"${i ? '' : ' disabled'}>Nach oben</button>`
         + `<button type="button" class="btn klein warn" data-ue-weg="${i}">Entfernen</button></div>`
-        + `<div class="felder"><label class="f breit"><span>Anweisung <em>Französisch</em></span><input type="text" id="u${i}-fr" data-u="${i}" data-uk="fr" value="${esc(u.fr)}"></label>`
+        + `<div class="felder"><label class="f breit"><span>Anweisung <em>${ZS}</em></span><input type="text" id="u${i}-fr" data-u="${i}" data-uk="fr" value="${esc(u.fr)}"></label>`
         + `<label class="f breit"><span>Anweisung <em>Deutsch</em></span><input type="text" id="u${i}-de" data-u="${i}" data-uk="de" value="${esc(u.de)}"></label>`
         + `<label class="f"><span>Zeit (min)</span><input type="number" min="1" id="u${i}-zeit" data-u="${i}" data-uk="zeit" value="${esc(u.zeit || '')}"></label>`
         + `<label class="f"><span>Punkte</span><input type="number" min="0" step="0.5" id="u${i}-p" data-u="${i}" data-uk="punkte" value="${esc(u.punkte || '')}"></label>`
         + `<label class="f"><span>Niveau</span><select id="u${i}-niv" data-u="${i}" data-uk="niveau"><option value="1"${u.niveau == 1 ? ' selected' : ''}>★ Grundübung</option><option value="2"${u.niveau == 2 ? ' selected' : ''}>★★ Anwendung</option><option value="3"${u.niveau == 3 ? ' selected' : ''}>★★★ Transfer</option></select></label>`
-        + (mitZeilen ? `<label class="f"><span>Schreiblinien</span><input type="number" min="1" id="u${i}-zl" data-u="${i}" data-ud="zeilen" value="${esc(d.zeilen || '')}"></label>` : '')
+        + (u.typ === 'zeichen' ? `<label class="f"><span>Kästchen je Zeichen</span><input type="number" min="1" max="10" id="u${i}-kz" data-u="${i}" data-ud="kaestchen" value="${esc(d.kaestchen || 6)}"></label>` : '')
+        + (MM && ['uebersetzen', 'fragen', 'schreiben'].includes(u.typ) ? `<label class="f"><span>Papier</span><select id="u${i}-pap" data-u="${i}" data-ud="papier"><option value=""${d.papier ? '' : ' selected'}>Linien</option><option value="kaestchen"${d.papier === 'kaestchen' ? ' selected' : ''}>Kästchen für Hanzi</option></select></label>` : '')
+        + (mitZeilen ? `<label class="f"><span>${MM && d.papier === 'kaestchen' ? 'Kästchenreihen' : 'Schreiblinien'}</span><input type="number" min="1" id="u${i}-zl" data-u="${i}" data-ud="zeilen" value="${esc(d.zeilen || '')}"></label>` : '')
         + `<label class="f breit"><span>Inhalt <em>${DATEN_HILFE[u.typ]}</em></span><textarea id="u${i}-daten" rows="5" data-u="${i}" data-uk="daten">${esc(datenText(u))}</textarea></label>`
         + (u.typ === 'schreiben' ? `<label class="f breit"><span>Mustertext <em>für die Lösung</em></span><textarea id="u${i}-muster" data-u="${i}" data-ud="muster">${esc(d.muster || '')}</textarea></label>` : '')
         + (u.typ === 'frei' ? `<label class="f breit"><span>Lösung</span><textarea id="u${i}-loes" data-u="${i}" data-ud="loesung">${esc(d.loesung || '')}</textarea></label>` : '')
@@ -318,11 +335,11 @@ input[type=checkbox],input[type=radio]{accent-color:var(--navy);width:16px;heigh
   }
   function uebungEingabe(el) {
     const u = sheet.uebungen[Number(el.dataset.u)], k = el.dataset.uk, dk = el.dataset.ud;
-    if (dk) { u.daten = u.daten || {}; u.daten[dk] = dk === 'zeilen' ? Number(el.value) || undefined : el.value; return; }
+    if (dk) { u.daten = u.daten || {}; u.daten[dk] = ['zeilen', 'kaestchen'].includes(dk) ? Number(el.value) || undefined : el.value; if (dk === 'papier') uebungenZeichnen(); return; }
     if (k === 'daten') return datenParse(u, el.value);
     if (k === 'typ') { const alt = datenText(u); u.typ = el.value; u.icon = B.UEBUNGSTYPEN[u.typ]; u.daten = {}; datenParse(u, alt); uebungenZeichnen(); return; }
     u[k] = ['zeit', 'punkte', 'niveau'].includes(k) ? (el.value === '' ? undefined : Number(el.value)) : el.value;
-    if (k === 'icon') el.parentNode.querySelector('img').src = `assets/icons/fs-icon-${el.value}.png`;
+    if (k === 'icon') el.parentNode.querySelector('img').src = `assets/icons/${PRE}-icon-${el.value}.png`;
   }
   $('ue-neu').onclick = () => { sheet.uebungen.push({ typ: 'luecken', icon: 'luecken-fuellen', fr: '', de: '', zeit: 5, niveau: 1, daten: { saetze: [] } }); uebungenZeichnen(); geaendert(); };
   $('uebungen').addEventListener('click', e => {
@@ -334,10 +351,20 @@ input[type=checkbox],input[type=radio]{accent-color:var(--navy);width:16px;heigh
   });
 
   // ---------- Vorschläge (Claude) ----------
+  const PROMPT_MM = () => `Du bist erfahrene Chinesischlehrkraft an einer deutschen Schule (Marke "Mandarin Maverick", Kurs "Fast Track Chinese"). Schlage 4 Übungen für ein Arbeitsblatt vor.
+Rahmen: ${sheet.lernjahr}. Lernjahr, ${sheet.klasse || '-'}, Thema: ${sheet.thema || '-'}, Titel: ${sheet.titel}, Lernziel: ${sheet.lernziel.de || sheet.lernziel.fr || '-'},
+Aufgabenstellung: ${sheet.aufgabe.de || '-'}, Sozialform: ${sheet.sozial.join(', ')}, Medium: ${sheet.medium.join(', ')}, KI: ${sheet.ki}, Zeit gesamt: ${sheet.zeit}.
+Vorhandene Übungen (nicht wiederholen): ${sheet.uebungen.map(u => u.de || u.fr).join(' | ') || 'keine'}.
+Regeln: vereinfachte Schriftzeichen; Pinyin mit Tonzeichen, Satzanfang groß, 一 und 不 immer im Grundton (yī, bù); nur Wortschatz, den die Klasse im Thema kennt; vom Leichten zum Schweren (niveau 1–3);
+Anweisung "de" auf Deutsch (Pflicht), "fr" optional eine kurze chinesische Anweisung in Hanzi.
+Antworte NUR mit einem JSON-Array. Jedes Element: {"typ": "luecken"|"zuordnen"|"uebersetzen"|"fragen"|"schreiben"|"zeichen", "de": string, "fr": string, "zeit": Zahl, "niveau": 1|2|3, "daten": ...}
+daten je typ: luecken {"saetze": ["Hanzi mit {{Lösung}} || Pinyin mit {{Lösung}} || Deutsch", ...]} (4–6) · zuordnen {"paare": [["Hanzi Pinyin","Deutsch"], ...]} (5–6, eindeutig) ·
+uebersetzen {"saetze": [["deutscher Satz","Hanzi || Pinyin"], ...], "zeilen": 1, "papier": "kaestchen"} · fragen {"saetze": [["chinesische Frage || Pinyin","Antwort Hanzi || Pinyin"], ...], "zeilen": 2} ·
+schreiben {"checkliste": ["deutscher Punkt", ...], "zeilen": 8, "papier": "kaestchen", "muster": "chinesischer Mustertext in Hanzi"} · zeichen {"zeichen": [["字","zì","Bedeutung"], ...], "kaestchen": 6}.`;
   $('ue-vorschlag').onclick = async () => {
     const m = $('vorschlag-meldung'); m.className = 'meldung'; m.textContent = 'Claude denkt nach … (das dauert meist 20–60 Sekunden)';
     $('ue-vorschlag').disabled = true;
-    const prompt = `Du bist erfahrene Französischlehrkraft an einer deutschen Schule (Marke "French Solution"). Schlage 4 Übungen für ein Arbeitsblatt vor.
+    const prompt = (MM ? PROMPT_MM() : `Du bist erfahrene Französischlehrkraft an einer deutschen Schule (Marke "French Solution"). Schlage 4 Übungen für ein Arbeitsblatt vor.
 Rahmen: ${sheet.lernjahr}. Lernjahr, Klasse ${sheet.klasse || '-'}, Thema: ${sheet.thema || '-'}, Titel: ${sheet.titel}, Lernziel: ${sheet.lernziel.fr || sheet.lernziel.de || '-'},
 Aufgabenstellung: ${sheet.aufgabe.fr || sheet.aufgabe.de || '-'}, Sozialform: ${sheet.sozial.join(', ')}, Medium: ${sheet.medium.join(', ')}, KI: ${sheet.ki}, Zeit gesamt: ${sheet.zeit}.
 Vorhandene Übungen (nicht wiederholen): ${sheet.uebungen.map(u => u.fr).join(' | ') || 'keine'}.
@@ -345,12 +372,12 @@ Regeln: einfache, korrekte Sprache passend zum Lernjahr; vom Leichten zum Schwer
 Antworte NUR mit einem JSON-Array. Jedes Element: {"typ": "luecken"|"zuordnen"|"uebersetzen"|"fragen"|"schreiben", "fr": string, "de": string, "zeit": Zahl (Minuten), "niveau": 1|2|3, "daten": ...}
 daten je typ: luecken {"saetze": ["Satz mit {{Lösung}}", ...]} (4–6 Sätze) · zuordnen {"paare": [["links","rechts"], ...]} (5–6 Paare, eindeutig) ·
 uebersetzen {"saetze": [["deutscher Satz","französische Lösung"], ...], "zeilen": 2} · fragen {"saetze": [["Frage","Musterantwort"], ...], "zeilen": 2} ·
-schreiben {"checkliste": ["deutscher Punkt", ...], "zeilen": 12, "muster": "französischer Mustertext"}.`;
+schreiben {"checkliste": ["deutscher Punkt", ...], "zeilen": 12, "muster": "französischer Mustertext"}.`);
     try {
       const vs = await sample.json(prompt, { modelTier: 'default' });
-      const ok = (Array.isArray(vs) ? vs : []).filter(v => v && TYPEN[v.typ] && v.fr);
+      const ok = (Array.isArray(vs) ? vs : []).filter(v => v && TYPEN[v.typ] && (v.fr || v.de));
       m.textContent = ok.length ? 'Vorschläge – prüfen und einzeln übernehmen:' : 'Claude hat keine verwertbaren Vorschläge geliefert. Bitte noch einmal versuchen.';
-      $('vorschlaege').innerHTML = ok.map((v, i) => `<div class="vk"><b>${esc(TYPEN[v.typ])}</b> · ${esc(v.fr)}<div class="hinw">${esc(v.de || '')}</div>`
+      $('vorschlaege').innerHTML = ok.map((v, i) => `<div class="vk"><b>${esc(TYPEN[v.typ])}</b> · ${esc(v.fr || v.de)}<div class="hinw">${esc(v.fr ? v.de || '' : '')}</div>`
         + `<div class="hinw">${esc(JSON.stringify(v.daten || {}).slice(0, 260))}…</div><button type="button" class="btn klein" data-vorschlag="${i}">Übernehmen</button></div>`).join('');
       $('vorschlaege')._vs = ok;
     } catch (err) {
@@ -446,7 +473,8 @@ schreiben {"checkliste": ["deutscher Punkt", ...], "zeilen": 12, "muster": "fran
       const probe = B.render(sheet, { modus: 'schueler', asset: n => 'assets/' + n });
       const pfade = [...new Set([...probe.matchAll(/src="(assets\/[^"]+)"/g)].map(x => x[1]))];
       const karte = {}; for (const p of pfade) karte[p.slice(7)] = await alsDataUri(p);
-      const html = B.standalone(sheet, { asset: n => karte[n] || '', fontFredoka: await alsDataUri('assets/fonts/Fredoka.ttf'), fontNunito: await alsDataUri('assets/fonts/Nunito.ttf') });
+      const html = MM ? B.standalone(sheet, { asset: n => karte[n] || '', fontHanzi: await alsDataUri('assets/fonts/MMKai-gb2312.ttf') })
+        : B.standalone(sheet, { asset: n => karte[n] || '', fontFredoka: await alsDataUri('assets/fonts/Fredoka.ttf'), fontNunito: await alsDataUri('assets/fonts/Nunito.ttf') });
       await speichernDatei(dateiname('-Schuelerfassung.html'), html);
     } catch (err) { melden('Schülerfassung konnte nicht gebaut werden.', 'fehler'); }
   };
