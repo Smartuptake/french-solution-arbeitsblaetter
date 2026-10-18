@@ -24,6 +24,9 @@ body[data-fach="mm"]{--navy:#02736F;--rouge:#039A9A;--clair:#E6F5F5;--display:'H
 .top{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));border-bottom:1px solid var(--line);background:var(--panel)}
 .top h1{font-family:var(--display);font-weight:600;font-size:20px;margin:0;color:var(--navy)}
 .top h1 b{font-weight:600}
+.werkzeug{font-weight:700;color:var(--navy);border:1px solid var(--navy);border-radius:8px;padding:5px 11px;text-decoration:none}
+.werkzeug:hover{background:var(--clair)}
+.werkzeug:focus-visible{outline:3px solid var(--rouge);outline-offset:2px}
 .top h1 span{color:var(--rouge)}
 .fach{display:flex;gap:4px;background:var(--clair);border-radius:8px;padding:3px}
 .fach button{font:inherit;font-weight:700;border:0;border-radius:6px;padding:5px 12px;background:transparent;color:var(--muted);cursor:pointer}
@@ -96,6 +99,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--navy);width:16px;heigh
 
 <header class="top">
   <h1>Arbeitsblatt-Generator <span>·</span> <b id="marke">French Solution</b></h1>
+  <a class="werkzeug" id="szlink" href="https://smartuptake.github.io/schriftzeichenblatt-generator/" target="_blank" rel="noopener" hidden>Schriftzeichenblatt-Generator ↗</a>
   <span class="st" id="speicherstand">Sammlung wird geladen …</span>
 </header>
 
@@ -208,7 +212,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--navy);width:16px;heigh
   const FACH = 'fs';
   const MM = FACH === 'mm', PRE = MM ? 'mm' : 'fs', ZS = MM ? 'Chinesisch (optional)' : 'Französisch';
   document.body.dataset.fach = FACH;
-  if (MM) { $('marke').textContent = 'Mandarin Maverick'; document.querySelectorAll('.zs-name').forEach(e => e.textContent = 'Chinesisch (optional)'); $('z-fr').placeholder = '我会 …'; }
+  if (MM) { $('marke').textContent = 'Mandarin Maverick'; $('szlink').hidden = false; document.querySelectorAll('.zs-name').forEach(e => e.textContent = 'Chinesisch (optional)'); $('z-fr').placeholder = '我会 …'; }
   const ICONS_MM = ['pinyin', 'radikale', 'schriftzeichen', 'toene'];
   const ICONS = ['ablauf','achtung','audio-aufnehmen','audio-hochladen','aussprache','bild-zuordnen','checkliste','dialog-schreiben','dialog','diktat','diskussion','dokument','erklaeren','fakten-finden','falsch','feedback','fehler-finden','frage-antwort','fragen-beantworten','genau-lesen','gruppe','gruppieren','hausaufgabe','hoeren','hoerverstehen','idee','inhalt-wiedergeben','karteikarte','ki','korrigieren','lernplan','lernziel','lesen','loesung','luecken-fuellen','melden','mindmap','multiple-choice','nachdenken','notizen','passt-nicht','praesentation','pro-contra','quiz','rede-halten','rede-schreiben','reihenfolge','richtig-falsch','satz-bilden','schreiben','single-choice','skizze-zeichnen','sprechen','test','titel-finden','tutorial','uebersetzen','video-anschauen','video-aufnehmen','vorlesen','woerter-sammeln','woerterbuch','zeitlimit','zuhoeren','zuordnen'].concat(MM ? ICONS_MM : []).sort();
   const iconName = s => s.replace(/ae/g, 'ä').replace(/oe/g, 'ö').replace(/ue/g, 'ü').replace(/-/g, ' ').replace(/^./, c => c.toUpperCase());

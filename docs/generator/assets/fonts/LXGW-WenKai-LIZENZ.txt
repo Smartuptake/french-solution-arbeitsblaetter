@@ -1,0 +1,3 @@
+Die Hanzi-Schrift in den Schülerfassungen und MMKai-gb2312.ttf sind Teilmengen von „LXGW WenKai“
+(Copyright LXGW, https://github.com/lxgw/LxgwWenKai), lizenziert unter der SIL Open Font License 1.1
+(https://openfontlicense.org). Die Teilmengen werden unter derselben Lizenz weitergegeben.
