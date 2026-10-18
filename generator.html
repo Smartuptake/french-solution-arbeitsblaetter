@@ -1,0 +1,494 @@
+<title>FS Arbeitsblatt-Generator</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+/* Werkbank: Sammlung links, Formular in der Mitte, das Blatt rechts als Papier – Farben aus dem French-Solution-Handbuch */
+:root{
+  --bg:#F3F5FA; --panel:#FFFFFF; --fg:#16213F; --muted:#5B6585; --line:#D9DEEA;
+  --navy:#1C2B5A; --rouge:#E2383F; --clair:#EEF2FA; --paper:#FFFFFF; --desk:#E3E8F2; --ok:#1F7A4D;
+  --display:'Fredoka',Nunito,'Segoe UI',sans-serif; --body:'Nunito','Segoe UI',Arial,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#10162A; --panel:#18203A; --fg:#E8ECF7; --muted:#A3ACC8; --line:#2C3656;
+  --navy:#9FB2F0; --rouge:#FF6B70; --clair:#222C4D; --paper:#FFFFFF; --desk:#0B1022; --ok:#5BD08E; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10162A; --panel:#18203A; --fg:#E8ECF7; --muted:#A3ACC8; --line:#2C3656;
+  --navy:#9FB2F0; --rouge:#FF6B70; --clair:#222C4D; --paper:#FFFFFF; --desk:#0B1022; --ok:#5BD08E; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:14px}
+*{box-sizing:border-box}
+.top{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));border-bottom:1px solid var(--line);background:var(--panel)}
+.top h1{font-family:var(--display);font-weight:600;font-size:20px;margin:0;color:var(--navy)}
+.top h1 span{color:var(--rouge)}
+.fach{display:flex;gap:4px;background:var(--clair);border-radius:8px;padding:3px}
+.fach button{font:inherit;font-weight:700;border:0;border-radius:6px;padding:5px 12px;background:transparent;color:var(--muted);cursor:pointer}
+.fach button[aria-pressed="true"]{background:var(--panel);color:var(--navy);box-shadow:0 1px 2px rgb(0 0 0 / .12)}
+.fach button:disabled{cursor:not-allowed}
+.top .st{margin-left:auto;color:var(--muted);font-size:13px}
+.grid{display:grid;grid-template-columns:220px minmax(0,1fr) minmax(0,760px);gap:16px;padding-block:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));align-items:start}
+@media (max-width:1280px){.grid{grid-template-columns:200px minmax(0,1fr)}.vorschau{grid-column:1/-1}}
+@media (max-width:760px){.grid{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;min-width:0}
+.samml{padding:12px;display:flex;flex-direction:column;gap:8px;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+@media (max-width:760px){.samml{position:static}}
+.samml h2,.ed h2,.vorschau h2{font-family:var(--display);font-weight:600;font-size:15px;color:var(--navy);margin:0}
+.samml ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px;max-height:60vh;overflow:auto}
+.samml li button{width:100%;text-align:left;font:inherit;border:1px solid transparent;background:transparent;color:var(--fg);border-radius:8px;padding:7px 9px;cursor:pointer}
+.samml li button:hover{background:var(--clair)}
+.samml li button[aria-current="true"]{background:var(--clair);border-color:var(--navy)}
+.samml li small{display:block;color:var(--muted);font-size:12px}
+.leer{color:var(--muted);font-size:13px;line-height:1.45}
+.btn{font:inherit;font-weight:700;border-radius:8px;padding:7px 12px;cursor:pointer;border:1px solid var(--navy);background:var(--navy);color:var(--panel)}
+.btn.zw{background:transparent;color:var(--navy)}
+.btn.klein{padding:4px 9px;font-size:12.5px}
+.btn.warn{border-color:var(--rouge);color:var(--rouge);background:transparent}
+.btn:disabled{opacity:.5;cursor:default}
+.btn:focus-visible,.fach button:focus-visible,.samml li button:focus-visible,summary:focus-visible{outline:3px solid var(--rouge);outline-offset:2px}
+.reihe{display:flex;flex-wrap:wrap;gap:6px}
+.ed{padding:4px 14px 14px;display:flex;flex-direction:column}
+details.abs{border-top:1px solid var(--line)}
+details.abs:first-of-type{border-top:0}
+details.abs>summary{cursor:pointer;list-style:none;display:flex;align-items:baseline;gap:10px;padding:12px 0}
+details.abs>summary::-webkit-details-marker{display:none}
+details.abs>summary .nr{font-family:var(--display);font-weight:600;color:var(--rouge);font-size:15px}
+details.abs>summary b{font-family:var(--display);font-weight:600;font-size:15px;color:var(--navy)}
+details.abs>summary small{color:var(--muted)}
+.felder{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px 14px;padding-bottom:14px}
+.f{display:flex;flex-direction:column;gap:4px;min-width:0}
+.f.breit{grid-column:1/-1}
+.f>span{font-weight:700;font-size:12.5px;color:var(--muted);letter-spacing:.02em}
+.f>span em{font-style:normal;font-weight:600;opacity:.8}
+input[type=text],input[type=number],select,textarea{font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:7px 9px;width:100%;min-width:0}
+textarea{resize:vertical;min-height:58px;line-height:1.4}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--navy);outline-offset:1px}
+.wahl{display:flex;flex-wrap:wrap;gap:6px 14px}
+.wahl label{display:inline-flex;align-items:center;gap:6px;cursor:pointer}
+input[type=checkbox],input[type=radio]{accent-color:var(--navy);width:16px;height:16px}
+.ue-karte{border:1px solid var(--line);border-radius:9px;padding:10px 12px;margin:0 0 10px;background:var(--bg)}
+.ue-kopf{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-bottom:8px}
+.ue-kopf .n{font-family:var(--display);font-weight:600;color:var(--rouge);font-size:17px;min-width:20px}
+.ue-kopf img{width:26px;height:26px}
+.ue-kopf .sp{flex:1}
+.hinw{font-size:12px;color:var(--muted)}
+.vorschlaege{display:flex;flex-direction:column;gap:8px;margin-top:8px}
+.vk{border:1px dashed var(--navy);border-radius:9px;padding:9px 11px;background:var(--panel)}
+.vk b{color:var(--navy)}
+.raster-ed{display:flex;flex-direction:column;gap:8px}
+.raster-zeile{display:grid;grid-template-columns:1.2fr repeat(4,1fr) auto;gap:6px;align-items:start}
+@media (max-width:900px){.raster-zeile{grid-template-columns:1fr 1fr}}
+.vorschau{padding:12px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.vk-kopf{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.papier{background:var(--desk);border-radius:8px;padding:14px;overflow-x:auto}
+.papier .blatt{background:var(--paper);box-shadow:0 2px 10px rgb(0 0 0 / .18);padding:12mm 10mm;width:200mm;max-width:none;margin:0 auto;color:#1a1a1a}
+.aktionen{display:flex;flex-wrap:wrap;gap:8px}
+.meldung{font-size:13px;color:var(--muted);min-height:1.2em}
+.meldung.ok{color:var(--ok)}
+.meldung.fehler{color:var(--rouge)}
+.bestaetigen{display:inline-flex;gap:6px;align-items:center;font-size:12.5px}
+@media (prefers-reduced-motion:no-preference){.btn,.samml li button{transition:background .15s,border-color .15s}}
+</style>
+<style id="blattcss"></style>
+
+<header class="top">
+  <h1>Arbeitsblatt-Generator <span>·</span> French Solution</h1>
+  <div class="fach" role="group" aria-label="Fach">
+    <button type="button" id="fach-fs" aria-pressed="true">Französisch</button>
+    <button type="button" id="fach-mm" aria-pressed="false" disabled title="Mandarin Maverick folgt (Kursverlauf 006-3)">Chinesisch · folgt</button>
+  </div>
+  <span class="st" id="speicherstand">Sammlung wird geladen …</span>
+</header>
+
+<main class="grid">
+  <aside class="panel samml" aria-label="Sammlung">
+    <h2>Sammlung</h2>
+    <div class="reihe">
+      <button type="button" class="btn klein" id="neu">Neues Blatt</button>
+      <button type="button" class="btn klein zw" id="kopie">Kopieren</button>
+    </div>
+    <ul id="liste"></ul>
+    <p class="leer" id="leer" hidden>Noch keine Blätter gespeichert. Mit „Neues Blatt“ legen Sie das erste an; es wird automatisch gesichert.</p>
+    <div id="loeschbereich"></div>
+  </aside>
+
+  <section class="panel ed" aria-label="Formular">
+    <details class="abs" open>
+      <summary><span class="nr">1</span><b>Kopf</b><small>Fach, Lernjahr, Klasse, Thema</small></summary>
+      <div class="felder">
+        <label class="f breit"><span>Titel des Blatts</span><input type="text" id="k-titel" data-k="titel"></label>
+        <label class="f"><span>Lernjahr</span><select id="k-lj" data-k="lernjahr" data-num="1"><option value="1">1. Lernjahr</option><option value="2">2. Lernjahr</option><option value="3">3. Lernjahr</option><option value="4">4. Lernjahr</option><option value="5">5. Lernjahr</option><option value="6">6. Lernjahr</option><option value="7">7. Lernjahr</option></select></label>
+        <label class="f"><span>Klasse</span><input type="text" id="k-klasse" data-k="klasse" placeholder="z. B. 8b"></label>
+        <label class="f breit"><span>Thema der Unterrichtseinheit</span><input type="text" id="k-thema" data-k="thema"></label>
+        <label class="f"><span>Zeit</span><input type="text" id="k-zeit" data-k="zeit" placeholder="z. B. 45 min"></label>
+      </div>
+    </details>
+
+    <details class="abs" open>
+      <summary><span class="nr">2</span><b>Bevor du startest</b><small>Aufgabe, Ziel, Sozialform, Medium, KI, Methode</small></summary>
+      <div class="felder">
+        <label class="f breit"><span>Aufgabenstellung <em>Französisch</em></span><textarea id="a-fr" data-k="aufgabe.fr"></textarea></label>
+        <label class="f breit"><span>Aufgabenstellung <em>Deutsch</em></span><textarea id="a-de" data-k="aufgabe.de"></textarea></label>
+        <div class="f"><span>Art</span><div class="wahl"><label><input type="radio" name="a-art" id="a-art-p" data-k="aufgabe.art" value="pflicht"> Pflicht</label><label><input type="radio" name="a-art" id="a-art-w" data-k="aufgabe.art" value="wahl"> Wahl</label></div></div>
+        <label class="f breit"><span>Lernziel als Können-Satz <em>Französisch</em></span><input type="text" id="z-fr" data-k="lernziel.fr" placeholder="Je peux …"></label>
+        <label class="f breit"><span>Lernziel <em>Deutsch</em></span><input type="text" id="z-de" data-k="lernziel.de" placeholder="Ich kann …"></label>
+        <div class="f"><span>Sozialform</span><div class="wahl" id="w-sozial"></div></div>
+        <div class="f"><span>analog / digital</span><div class="wahl" id="w-medium"></div></div>
+        <div class="f"><span>KI-Nutzung</span><div class="wahl"><label><input type="radio" name="ki" id="ki-j" data-k="ki" value="erlaubt"> erlaubt</label><label><input type="radio" name="ki" id="ki-n" data-k="ki" value="verboten"> verboten</label></div></div>
+        <label class="f breit"><span>Methode</span><textarea id="m-methode" data-k="methode"></textarea></label>
+      </div>
+    </details>
+
+    <details class="abs" open>
+      <summary><span class="nr">3</span><b>Was am Ende entsteht</b><small>Abgabe, Präsentation, Kriterien, Bewertung</small></summary>
+      <div class="felder">
+        <label class="f"><span>Abgabeformat</span><input type="text" id="ab-format" data-k="abgabe.format"></label>
+        <label class="f"><span>Abgabetermin</span><input type="text" id="ab-termin" data-k="abgabe.termin" placeholder="z. B. 20.10. oder nächste Stunde"></label>
+        <div class="f breit"><span>Präsentationsform</span><div class="wahl" id="w-praes"></div></div>
+        <label class="f breit"><span>Qualitätskriterien <em>eins pro Zeile</em></span><textarea id="kriterien" data-lines="kriterien"></textarea></label>
+        <div class="f breit"><span>Bewertung</span><div class="wahl" id="w-bewertung"></div></div>
+        <div class="f breit" id="raster-feld"><span>Kompetenzraster <em>vier Stufen, ohne Mitte</em></span><div class="raster-ed" id="raster-ed"></div><div><button type="button" class="btn klein zw" id="raster-neu">Kriterium hinzufügen</button></div></div>
+      </div>
+    </details>
+
+    <details class="abs" open>
+      <summary><span class="nr">4</span><b>Übungen</b><small>Bausteine aus dem Icon-Katalog</small></summary>
+      <div id="uebungen"></div>
+      <div class="reihe" style="padding-bottom:6px">
+        <button type="button" class="btn klein" id="ue-neu">Übung hinzufügen</button>
+        <button type="button" class="btn klein zw" id="ue-vorschlag" hidden>Übungen vorschlagen lassen</button>
+      </div>
+      <div class="meldung" id="vorschlag-meldung"></div>
+      <div class="vorschlaege" id="vorschlaege"></div>
+    </details>
+
+    <details class="abs" open>
+      <summary><span class="nr">5</span><b>Wenn du fertig bist</b><small>Reflexion, Aufgaben-Evaluation, Wie geht es weiter</small></summary>
+      <div class="felder">
+        <div class="f breit"><span>Bausteine</span><div class="wahl">
+          <label><input type="checkbox" id="r-p" data-bool="reflexion.prozess"> Selbstreflexion Arbeitsprozess</label>
+          <label><input type="checkbox" id="r-e" data-bool="reflexion.ergebnis"> Selbstreflexion Arbeitsergebnis</label>
+          <label><input type="checkbox" id="r-ev" data-bool="evaluation"> Aufgaben-Evaluation</label>
+        </div><span class="hinw">Standard-Reflexion (14.10.2026); Rückmeldung der Lehrkraft erscheint, wenn „Rückmeldung ohne Note“ gewählt ist.</span></div>
+        <label class="f breit"><span>Wie geht es weiter?</span><textarea id="weiter" data-k="weiter"></textarea></label>
+      </div>
+    </details>
+  </section>
+
+  <section class="panel vorschau" aria-label="Vorschau">
+    <div class="vk-kopf">
+      <h2>Vorschau</h2>
+      <div class="fach" role="group" aria-label="Fassung">
+        <button type="button" id="m-druck" aria-pressed="true">Schülerblatt</button>
+        <button type="button" id="m-loesung" aria-pressed="false">Lösung</button>
+      </div>
+    </div>
+    <div class="aktionen">
+      <button type="button" class="btn" id="pdf">PDF Schülerblatt</button>
+      <button type="button" class="btn zw" id="pdf-l">PDF Lösung</button>
+      <button type="button" class="btn zw" id="html">Schülerfassung (HTML für Moodle)</button>
+      <button type="button" class="btn zw" id="endfassung">Endfassung Word + PDF anfordern</button>
+      <label class="btn zw" for="import">Blatt importieren<input type="file" id="import" accept=".json,application/json" hidden></label>
+    </div>
+    <p class="hinw" id="lokal-hinweis" hidden>Offline-Fassung: Die Blätter werden nur in diesem Browser gespeichert. Für die gemeinsame Sammlung auf allen Geräten, Vorschläge von Claude und die Word-Endfassung den Generator auf claude.ai verwenden; Blätter lassen sich hier exportieren und dort importieren.</p>
+    <div class="meldung" id="aktion-meldung"></div>
+    <div class="papier"><div class="blatt" id="blatt"></div></div>
+  </section>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="blatt.js"></script>
+<script>
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const B = window.FSBlatt;
+  $('blattcss').textContent = B.CSS;
+
+  const ICONS = ['ablauf','achtung','audio-aufnehmen','audio-hochladen','aussprache','bild-zuordnen','checkliste','dialog-schreiben','dialog','diktat','diskussion','dokument','erklaeren','fakten-finden','falsch','feedback','fehler-finden','frage-antwort','fragen-beantworten','genau-lesen','gruppe','gruppieren','hausaufgabe','hoeren','hoerverstehen','idee','inhalt-wiedergeben','karteikarte','ki','korrigieren','lernplan','lernziel','lesen','loesung','luecken-fuellen','melden','mindmap','multiple-choice','nachdenken','notizen','passt-nicht','praesentation','pro-contra','quiz','rede-halten','rede-schreiben','reihenfolge','richtig-falsch','satz-bilden','schreiben','single-choice','skizze-zeichnen','sprechen','test','titel-finden','tutorial','uebersetzen','video-anschauen','video-aufnehmen','vorlesen','woerter-sammeln','woerterbuch','zeitlimit','zuhoeren','zuordnen'];
+  const iconName = s => s.replace(/ae/g, 'ä').replace(/oe/g, 'ö').replace(/ue/g, 'ü').replace(/-/g, ' ').replace(/^./, c => c.toUpperCase());
+  const TYPEN = { luecken: 'Lücken füllen', zuordnen: 'Zuordnen', uebersetzen: 'Übersetzen', fragen: 'Fragen beantworten', schreiben: 'Text schreiben', frei: 'Freie Aufgabe' };
+  const DATEN_HILFE = {
+    luecken: 'Ein Satz pro Zeile. Lücke als {{Lösung}}, Varianten mit | trennen.',
+    zuordnen: 'Ein Paar pro Zeile: links = rechts. Rechts wird automatisch gemischt.',
+    uebersetzen: 'Eine Aufgabe pro Zeile: Vorlage = Lösung.',
+    fragen: 'Eine Frage pro Zeile: Frage = Musterantwort.',
+    schreiben: 'Checkliste: ein Punkt pro Zeile.',
+    frei: 'Text der Aufgabe.'
+  };
+
+  const LEER = () => ({ id: 'fs-' + Date.now().toString(36), fach: 'fs', titel: 'Neues Arbeitsblatt', lernjahr: 3, klasse: '', thema: '', zeit: '45 min',
+    aufgabe: { fr: '', de: '', art: 'pflicht' }, lernziel: { fr: '', de: '' }, sozial: ['einzel'], medium: ['analog'], ki: 'verboten', methode: '',
+    abgabe: { format: '', termin: '' }, praesentation: ['keine'], kriterien: ['vollständig, ordentlich, pünktlich'], bewertung: { arten: ['feedback'], raster: [] },
+    uebungen: [], reflexion: { prozess: true, ergebnis: true }, evaluation: true, weiter: '' });
+
+  let sheet = LEER(), db = null, sample = null, downloads = null, blaetter = [], modus = 'druck', speicherTimer = null, renderTimer = null;
+  // Lokaler Modus (z. B. auf GitHub Pages): Sammlung im Browser, Dateien per normalem Download, keine Vorschläge
+  let lokal = false;
+  const LK = 'fsgen-blaetter';
+  const lokalLesen = () => { try { return JSON.parse(localStorage.getItem(LK) || '[]'); } catch (e) { return []; } };
+  const lokalSchreiben = l => { try { localStorage.setItem(LK, JSON.stringify(l)); return true; } catch (e) { return false; } };
+
+  // ---------- Pfade ----------
+  const get = (o, p) => p.split('.').reduce((a, k) => a == null ? a : a[k], o);
+  const set = (o, p, v) => { const ks = p.split('.'); let a = o; ks.slice(0, -1).forEach(k => { if (a[k] == null || typeof a[k] !== 'object') a[k] = {}; a = a[k]; }); a[ks[ks.length - 1]] = v; };
+
+  // ---------- Auswahlgruppen ----------
+  function gruppe(el, feld, eintraege) {
+    el.innerHTML = eintraege.map(([k, l]) => `<label><input type="checkbox" id="${feld}-${k}" data-arr="${feld}" value="${k}"> ${l}</label>`).join('');
+  }
+  gruppe($('w-sozial'), 'sozial', Object.entries(B.SOZIAL).map(([k, v]) => [k, v[1]]));
+  gruppe($('w-medium'), 'medium', Object.entries(B.MEDIUM).map(([k, v]) => [k, v[1]]));
+  gruppe($('w-praes'), 'praesentation', Object.entries(B.PRAES).map(([k, v]) => [k, v[1]]));
+  gruppe($('w-bewertung'), 'bewertung.arten', Object.entries(B.BEWERTUNG).map(([k, v]) => [k, v[1]]));
+
+  // ---------- Formular füllen ----------
+  function formularFuellen() {
+    document.querySelectorAll('[data-k]').forEach(el => {
+      const v = get(sheet, el.dataset.k);
+      if (el.type === 'radio') el.checked = String(v) === el.value; else el.value = v == null ? '' : v;
+    });
+    document.querySelectorAll('[data-arr]').forEach(el => { el.checked = (get(sheet, el.dataset.arr) || []).includes(el.value); });
+    document.querySelectorAll('[data-bool]').forEach(el => { el.checked = get(sheet, el.dataset.bool) !== false; });
+    document.querySelectorAll('[data-lines]').forEach(el => { el.value = (get(sheet, el.dataset.lines) || []).join('\n'); });
+    rasterZeichnen(); uebungenZeichnen(); sichtbarkeit(); vorschau();
+  }
+  function sichtbarkeit() { $('raster-feld').hidden = !(sheet.bewertung.arten || []).includes('raster'); }
+
+  document.querySelector('.ed').addEventListener('input', e => {
+    const el = e.target;
+    if (el.dataset.k) { if (el.type === 'radio' && !el.checked) return; set(sheet, el.dataset.k, el.dataset.num ? Number(el.value) : el.value); }
+    else if (el.dataset.arr) { const arr = new Set(get(sheet, el.dataset.arr) || []); el.checked ? arr.add(el.value) : arr.delete(el.value); set(sheet, el.dataset.arr, [...arr]); sichtbarkeit(); }
+    else if (el.dataset.bool) set(sheet, el.dataset.bool, el.checked);
+    else if (el.dataset.lines) set(sheet, el.dataset.lines, el.value.split('\n').map(s => s.trim()).filter(Boolean));
+    else if (el.dataset.raster) { const [i, j] = el.dataset.raster.split(':').map(Number); const r = sheet.bewertung.raster[i]; if (j < 0) r.kriterium = el.value; else r.stufen[j] = el.value; }
+    else if (el.dataset.u) uebungEingabe(el);
+    else return;
+    geaendert();
+  });
+  document.querySelector('.ed').addEventListener('change', e => { if (e.target.matches('[data-arr],[data-bool],input[type=radio],select')) e.target.dispatchEvent(new Event('input', { bubbles: true })); });
+
+  // ---------- Kompetenzraster ----------
+  function rasterZeichnen() {
+    const r = sheet.bewertung.raster || (sheet.bewertung.raster = []);
+    $('raster-ed').innerHTML = r.map((z, i) => `<div class="raster-zeile"><input type="text" id="ra-${i}-k" data-raster="${i}:-1" value="${esc(z.kriterium)}" placeholder="Kriterium" aria-label="Kriterium">`
+      + [0, 1, 2, 3].map(j => `<input type="text" id="ra-${i}-${j}" data-raster="${i}:${j}" value="${esc((z.stufen || [])[j] || '')}" placeholder="Stufe ${4 - j}" aria-label="Stufe ${4 - j}">`).join('')
+      + `<button type="button" class="btn klein warn" data-raster-weg="${i}">Entfernen</button></div>`).join('') || '<span class="hinw">Noch kein Kriterium.</span>';
+  }
+  $('raster-neu').onclick = () => { sheet.bewertung.raster.push({ kriterium: '', stufen: ['', '', '', ''] }); rasterZeichnen(); geaendert(); };
+  $('raster-ed').addEventListener('click', e => { const i = e.target.dataset.rasterWeg; if (i != null) { sheet.bewertung.raster.splice(Number(i), 1); rasterZeichnen(); geaendert(); } });
+
+  // ---------- Übungen ----------
+  const esc = B.esc;
+  function datenText(u) {
+    const d = u.daten || {};
+    if (u.typ === 'luecken') return (d.saetze && d.saetze.length ? d.saetze : (d.text ? [d.text] : [])).join('\n');
+    if (u.typ === 'zuordnen') return (d.paare || []).map(p => p.join(' = ')).join('\n');
+    if (u.typ === 'uebersetzen' || u.typ === 'fragen') return (d.saetze || []).map(p => p.join(' = ')).join('\n');
+    if (u.typ === 'schreiben') return (d.checkliste || []).join('\n');
+    return d.text || '';
+  }
+  function datenParse(u, text) {
+    const zeilen = text.split('\n').map(s => s.trim()).filter(Boolean), d = u.daten || (u.daten = {});
+    const paar = z => { const i = z.indexOf(' = '); return i < 0 ? [z, ''] : [z.slice(0, i), z.slice(i + 3)]; };
+    if (u.typ === 'luecken') { d.saetze = zeilen; delete d.text; }
+    else if (u.typ === 'zuordnen') { d.paare = zeilen.map(paar); delete d.mischung; }
+    else if (u.typ === 'uebersetzen' || u.typ === 'fragen') d.saetze = zeilen.map(paar);
+    else if (u.typ === 'schreiben') d.checkliste = zeilen;
+    else d.text = text;
+  }
+  function uebungenZeichnen() {
+    const ue = sheet.uebungen || (sheet.uebungen = []);
+    $('uebungen').innerHTML = ue.map((u, i) => {
+      const d = u.daten || {}, mitZeilen = ['uebersetzen', 'fragen', 'schreiben', 'frei'].includes(u.typ);
+      return `<div class="ue-karte"><div class="ue-kopf"><span class="n">${i + 1}</span><img src="assets/icons/fs-icon-${esc(u.icon || B.UEBUNGSTYPEN[u.typ])}.png" alt="">`
+        + `<select id="u${i}-typ" data-u="${i}" data-uk="typ" aria-label="Übungstyp">${Object.entries(TYPEN).map(([k, l]) => `<option value="${k}"${u.typ === k ? ' selected' : ''}>${l}</option>`).join('')}</select>`
+        + `<select id="u${i}-icon" data-u="${i}" data-uk="icon" aria-label="Icon">${ICONS.map(n => `<option value="${n}"${(u.icon || B.UEBUNGSTYPEN[u.typ]) === n ? ' selected' : ''}>${iconName(n)}</option>`).join('')}</select>`
+        + `<span class="sp"></span><button type="button" class="btn klein zw" data-ue-hoch="${i}"${i ? '' : ' disabled'}>Nach oben</button>`
+        + `<button type="button" class="btn klein warn" data-ue-weg="${i}">Entfernen</button></div>`
+        + `<div class="felder"><label class="f breit"><span>Anweisung <em>Französisch</em></span><input type="text" id="u${i}-fr" data-u="${i}" data-uk="fr" value="${esc(u.fr)}"></label>`
+        + `<label class="f breit"><span>Anweisung <em>Deutsch</em></span><input type="text" id="u${i}-de" data-u="${i}" data-uk="de" value="${esc(u.de)}"></label>`
+        + `<label class="f"><span>Zeit (min)</span><input type="number" min="1" id="u${i}-zeit" data-u="${i}" data-uk="zeit" value="${esc(u.zeit || '')}"></label>`
+        + `<label class="f"><span>Punkte</span><input type="number" min="0" step="0.5" id="u${i}-p" data-u="${i}" data-uk="punkte" value="${esc(u.punkte || '')}"></label>`
+        + `<label class="f"><span>Niveau</span><select id="u${i}-niv" data-u="${i}" data-uk="niveau"><option value="1"${u.niveau == 1 ? ' selected' : ''}>★ Grundübung</option><option value="2"${u.niveau == 2 ? ' selected' : ''}>★★ Anwendung</option><option value="3"${u.niveau == 3 ? ' selected' : ''}>★★★ Transfer</option></select></label>`
+        + (mitZeilen ? `<label class="f"><span>Schreiblinien</span><input type="number" min="1" id="u${i}-zl" data-u="${i}" data-ud="zeilen" value="${esc(d.zeilen || '')}"></label>` : '')
+        + `<label class="f breit"><span>Inhalt <em>${DATEN_HILFE[u.typ]}</em></span><textarea id="u${i}-daten" rows="5" data-u="${i}" data-uk="daten">${esc(datenText(u))}</textarea></label>`
+        + (u.typ === 'schreiben' ? `<label class="f breit"><span>Mustertext <em>für die Lösung</em></span><textarea id="u${i}-muster" data-u="${i}" data-ud="muster">${esc(d.muster || '')}</textarea></label>` : '')
+        + (u.typ === 'frei' ? `<label class="f breit"><span>Lösung</span><textarea id="u${i}-loes" data-u="${i}" data-ud="loesung">${esc(d.loesung || '')}</textarea></label>` : '')
+        + '</div></div>';
+    }).join('') || '<p class="hinw">Noch keine Übung. Fügen Sie eine hinzu oder lassen Sie sich Vorschläge machen.</p>';
+  }
+  function uebungEingabe(el) {
+    const u = sheet.uebungen[Number(el.dataset.u)], k = el.dataset.uk, dk = el.dataset.ud;
+    if (dk) { u.daten = u.daten || {}; u.daten[dk] = dk === 'zeilen' ? Number(el.value) || undefined : el.value; return; }
+    if (k === 'daten') return datenParse(u, el.value);
+    if (k === 'typ') { const alt = datenText(u); u.typ = el.value; u.icon = B.UEBUNGSTYPEN[u.typ]; u.daten = {}; datenParse(u, alt); uebungenZeichnen(); return; }
+    u[k] = ['zeit', 'punkte', 'niveau'].includes(k) ? (el.value === '' ? undefined : Number(el.value)) : el.value;
+    if (k === 'icon') el.parentNode.querySelector('img').src = `assets/icons/fs-icon-${el.value}.png`;
+  }
+  $('ue-neu').onclick = () => { sheet.uebungen.push({ typ: 'luecken', icon: 'luecken-fuellen', fr: '', de: '', zeit: 5, niveau: 1, daten: { saetze: [] } }); uebungenZeichnen(); geaendert(); };
+  $('uebungen').addEventListener('click', e => {
+    const h = e.target.dataset.ueHoch, w = e.target.dataset.ueWeg, u = sheet.uebungen;
+    if (h != null) { const i = Number(h); [u[i - 1], u[i]] = [u[i], u[i - 1]]; }
+    else if (w != null) { if (e.target.dataset.sicher !== '1') { e.target.dataset.sicher = '1'; e.target.textContent = 'Wirklich entfernen?'; return; } u.splice(Number(w), 1); }
+    else return;
+    uebungenZeichnen(); geaendert();
+  });
+
+  // ---------- Vorschläge (Claude) ----------
+  $('ue-vorschlag').onclick = async () => {
+    const m = $('vorschlag-meldung'); m.className = 'meldung'; m.textContent = 'Claude denkt nach … (das dauert meist 20–60 Sekunden)';
+    $('ue-vorschlag').disabled = true;
+    const prompt = `Du bist erfahrene Französischlehrkraft an einer deutschen Schule (Marke "French Solution"). Schlage 4 Übungen für ein Arbeitsblatt vor.
+Rahmen: ${sheet.lernjahr}. Lernjahr, Klasse ${sheet.klasse || '-'}, Thema: ${sheet.thema || '-'}, Titel: ${sheet.titel}, Lernziel: ${sheet.lernziel.fr || sheet.lernziel.de || '-'},
+Aufgabenstellung: ${sheet.aufgabe.fr || sheet.aufgabe.de || '-'}, Sozialform: ${sheet.sozial.join(', ')}, Medium: ${sheet.medium.join(', ')}, KI: ${sheet.ki}, Zeit gesamt: ${sheet.zeit}.
+Vorhandene Übungen (nicht wiederholen): ${sheet.uebungen.map(u => u.fr).join(' | ') || 'keine'}.
+Regeln: einfache, korrekte Sprache passend zum Lernjahr; vom Leichten zum Schweren (niveau 1–3); Anweisung fr auf Französisch, de auf Deutsch; nur Wortschatz, den die Klasse im Thema kennt.
+Antworte NUR mit einem JSON-Array. Jedes Element: {"typ": "luecken"|"zuordnen"|"uebersetzen"|"fragen"|"schreiben", "fr": string, "de": string, "zeit": Zahl (Minuten), "niveau": 1|2|3, "daten": ...}
+daten je typ: luecken {"saetze": ["Satz mit {{Lösung}}", ...]} (4–6 Sätze) · zuordnen {"paare": [["links","rechts"], ...]} (5–6 Paare, eindeutig) ·
+uebersetzen {"saetze": [["deutscher Satz","französische Lösung"], ...], "zeilen": 2} · fragen {"saetze": [["Frage","Musterantwort"], ...], "zeilen": 2} ·
+schreiben {"checkliste": ["deutscher Punkt", ...], "zeilen": 12, "muster": "französischer Mustertext"}.`;
+    try {
+      const vs = await sample.json(prompt, { modelTier: 'default' });
+      const ok = (Array.isArray(vs) ? vs : []).filter(v => v && TYPEN[v.typ] && v.fr);
+      m.textContent = ok.length ? 'Vorschläge – prüfen und einzeln übernehmen:' : 'Claude hat keine verwertbaren Vorschläge geliefert. Bitte noch einmal versuchen.';
+      $('vorschlaege').innerHTML = ok.map((v, i) => `<div class="vk"><b>${esc(TYPEN[v.typ])}</b> · ${esc(v.fr)}<div class="hinw">${esc(v.de || '')}</div>`
+        + `<div class="hinw">${esc(JSON.stringify(v.daten || {}).slice(0, 260))}…</div><button type="button" class="btn klein" data-vorschlag="${i}">Übernehmen</button></div>`).join('');
+      $('vorschlaege')._vs = ok;
+    } catch (err) {
+      m.className = 'meldung fehler';
+      m.textContent = err && err.code === 'not_granted' ? 'Vorschläge sind nicht freigegeben. Sie können Übungen weiterhin selbst eintragen.' : 'Vorschläge sind gerade nicht möglich (' + (err && err.code || 'Fehler') + '). Bitte später erneut versuchen.';
+    } finally { $('ue-vorschlag').disabled = false; }
+  };
+  $('vorschlaege').addEventListener('click', e => {
+    const i = e.target.dataset.vorschlag; if (i == null) return;
+    const v = $('vorschlaege')._vs[Number(i)];
+    sheet.uebungen.push({ typ: v.typ, icon: B.UEBUNGSTYPEN[v.typ], fr: v.fr, de: v.de || '', zeit: v.zeit, niveau: v.niveau, daten: v.daten || {} });
+    e.target.closest('.vk').remove(); uebungenZeichnen(); geaendert();
+  });
+
+  // ---------- Vorschau ----------
+  function vorschau() { $('blatt').innerHTML = B.render(sheet, { modus, asset: n => 'assets/' + n }); }
+  function geaendert() {
+    clearTimeout(renderTimer); renderTimer = setTimeout(vorschau, 250);
+    if (db || lokal) { $('speicherstand').textContent = 'Änderungen werden gespeichert …'; clearTimeout(speicherTimer); speicherTimer = setTimeout(speichern, 1200); }
+  }
+  ['druck', 'loesung'].forEach(k => $('m-' + k).onclick = () => { modus = k; $('m-druck').setAttribute('aria-pressed', k === 'druck'); $('m-loesung').setAttribute('aria-pressed', k === 'loesung'); vorschau(); });
+
+  // ---------- Sammlung (db) ----------
+  async function speichern() {
+    speicherTimer = null;
+    if (lokal) {
+      sheet.geaendert = new Date().toISOString();
+      blaetter = [JSON.parse(JSON.stringify(sheet))].concat(blaetter.filter(b => b.id !== sheet.id));
+      $('speicherstand').textContent = lokalSchreiben(blaetter) ? 'Gespeichert in diesem Browser ' + new Date().toLocaleTimeString('de-DE').slice(0, 5) : 'Speichern im Browser nicht möglich – bitte als Datei exportieren.';
+      return listeZeichnen();
+    }
+    if (!db) return;
+    sheet.geaendert = new Date().toISOString();
+    try { await db.collection('blaetter').doc(sheet.id).set(JSON.parse(JSON.stringify(sheet))); $('speicherstand').textContent = 'Gespeichert ' + new Date().toLocaleTimeString('de-DE').slice(0, 5); }
+    catch (err) { $('speicherstand').textContent = 'Speichern fehlgeschlagen (' + (err.code || 'Fehler') + ') – Änderungen bleiben in diesem Fenster.'; }
+  }
+  function listeZeichnen() {
+    $('leer').hidden = blaetter.length > 0;
+    $('liste').innerHTML = blaetter.map(b => `<li><button type="button" data-id="${esc(b.id)}" aria-current="${b.id === sheet.id}">${esc(b.titel || 'ohne Titel')}<small>${esc(b.klasse || '')} · ${esc(b.lernjahr)}. LJ${b.status === 'endfassung' ? ' · Endfassung angefordert' : ''}</small></button></li>`).join('');
+    $('loeschbereich').innerHTML = blaetter.some(b => b.id === sheet.id) ? `<button type="button" class="btn klein warn" id="loeschen">Blatt löschen</button>` : '';
+  }
+  $('liste').addEventListener('click', e => {
+    const b = e.target.closest('button[data-id]'); if (!b) return;
+    const s = blaetter.find(x => x.id === b.dataset.id); if (!s) return;
+    if (speicherTimer) { clearTimeout(speicherTimer); speichern(); }
+    sheet = JSON.parse(JSON.stringify(s)); formularFuellen(); listeZeichnen();
+  });
+  $('loeschbereich').addEventListener('click', async e => {
+    if (e.target.id === 'loeschen') { $('loeschbereich').innerHTML = `<span class="bestaetigen">Endgültig löschen? <button type="button" class="btn klein warn" id="ja-loeschen">Ja</button><button type="button" class="btn klein zw" id="nein">Nein</button></span>`; return; }
+    if (e.target.id === 'nein') return listeZeichnen();
+    if (e.target.id === 'ja-loeschen') {
+      if (lokal) { blaetter = blaetter.filter(b => b.id !== sheet.id); lokalSchreiben(blaetter); }
+      else { try { await db.collection('blaetter').doc(sheet.id).delete(); } catch (err) {} }
+      sheet = LEER(); formularFuellen(); listeZeichnen();
+    }
+  });
+  $('neu').onclick = () => { sheet = LEER(); formularFuellen(); if (db || lokal) speichern(); listeZeichnen(); };
+  $('kopie').onclick = () => { const k = JSON.parse(JSON.stringify(sheet)); k.id = 'fs-' + Date.now().toString(36); k.titel = (k.titel || '') + ' (Kopie)'; delete k.status; sheet = k; formularFuellen(); if (db || lokal) speichern(); };
+
+  // ---------- Ausgabe ----------
+  const melden = (t, art) => { const m = $('aktion-meldung'); m.className = 'meldung' + (art ? ' ' + art : ''); m.textContent = t; };
+  const dateiname = suffix => (sheet.klasse ? sheet.klasse + '-' : '') + (sheet.titel || 'Arbeitsblatt').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, '') + suffix;
+  async function speichernDatei(name, data) {
+    if (lokal) {   // außerhalb von claude.ai: normaler Browser-Download
+      const url = URL.createObjectURL(data instanceof Blob ? data : new Blob([data], { type: name.endsWith('.json') ? 'application/json' : 'text/html' }));
+      const a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000); return melden('Heruntergeladen: ' + name, 'ok');
+    }
+    if (!downloads) return melden('Dateien können in dieser Ansicht nicht gespeichert werden.', 'fehler');
+    try { await downloads.save({ filename: name, data }); melden('Gespeichert: ' + name, 'ok'); }
+    catch (err) { melden(err && err.code === 'declined' ? 'Speichern abgebrochen.' : 'Speichern nicht möglich (' + (err && err.code || 'Fehler') + ').', err && err.code === 'declined' ? '' : 'fehler'); }
+  }
+  async function pdf(m) {
+    if (!window.html2pdf) return melden('Die PDF-Erzeugung konnte nicht geladen werden. Fordern Sie die Endfassung an – ich erstelle PDF und Word.', 'fehler');
+    melden('PDF wird erzeugt …');
+    const box = document.createElement('div'); box.style.cssText = 'position:fixed;left:-10000px;top:0;width:186mm;background:#fff';
+    box.innerHTML = B.render(sheet, { modus: m, asset: n => 'assets/' + n }); document.body.appendChild(box);
+    try {
+      await document.fonts.ready;
+      const blob = await window.html2pdf().set({ margin: [12, 12, 14, 12], image: { type: 'jpeg', quality: 0.95 }, html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff' },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: ['css', 'legacy'], avoid: ['.ue', '.blk', '.rf', '.br', 'tr', 'li'] } }).from(box.firstElementChild).outputPdf('blob');
+      await speichernDatei(dateiname(m === 'loesung' ? '-Loesung.pdf' : '.pdf'), blob);
+    } catch (err) { melden('PDF-Erzeugung fehlgeschlagen. Fordern Sie die Endfassung an.', 'fehler'); }
+    finally { box.remove(); }
+  }
+  $('pdf').onclick = () => pdf('druck');
+  $('pdf-l').onclick = () => pdf('loesung');
+
+  const alsDataUri = async pfad => { const r = await fetch(pfad); const b = await r.blob(); return await new Promise(ok => { const f = new FileReader(); f.onload = () => ok(f.result); f.readAsDataURL(b); }); };
+  $('html').onclick = async () => {
+    melden('Schülerfassung wird gebaut …');
+    try {
+      const probe = B.render(sheet, { modus: 'schueler', asset: n => 'assets/' + n });
+      const pfade = [...new Set([...probe.matchAll(/src="(assets\/[^"]+)"/g)].map(x => x[1]))];
+      const karte = {}; for (const p of pfade) karte[p.slice(7)] = await alsDataUri(p);
+      const html = B.standalone(sheet, { asset: n => karte[n] || '', fontFredoka: await alsDataUri('assets/fonts/Fredoka.ttf'), fontNunito: await alsDataUri('assets/fonts/Nunito.ttf') });
+      await speichernDatei(dateiname('-Schuelerfassung.html'), html);
+    } catch (err) { melden('Schülerfassung konnte nicht gebaut werden.', 'fehler'); }
+  };
+  $('import').onchange = async e => {
+    const f = e.target.files[0]; if (!f) return;
+    try {
+      const s = JSON.parse(await f.text());
+      if (!s || typeof s !== 'object' || !Array.isArray(s.uebungen)) throw new Error('kein Blatt');
+      sheet = Object.assign(LEER(), s); formularFuellen(); if (db || lokal) speichern(); melden('Importiert: ' + (sheet.titel || f.name), 'ok');
+    } catch (err) { melden('Diese Datei ist kein Arbeitsblatt aus dem Generator.', 'fehler'); }
+    e.target.value = '';
+  };
+  $('endfassung').onclick = async () => {
+    if (lokal) return speichernDatei(dateiname('.json'), JSON.stringify(sheet, null, 1));
+    if (!db) return melden('Ohne Sammlung kann ich die Endfassung nicht abrufen.', 'fehler');
+    sheet.status = 'endfassung'; sheet.angefordert = new Date().toISOString(); await speichern();
+    melden('Angefordert. Schreiben Sie Claude im Chat: „Endfassung für ' + sheet.titel + '“ – dann entstehen Word, PDF, Lösung und der GitHub-Link.', 'ok');
+  };
+
+  // ---------- Start ----------
+  function lokalStarten() {
+    lokal = true; blaetter = lokalLesen();
+    $('endfassung').textContent = 'Blatt als Datei exportieren';
+    $('lokal-hinweis').hidden = false;
+    if (blaetter.length) sheet = JSON.parse(JSON.stringify(blaetter[0]));
+    formularFuellen(); listeZeichnen();
+    $('speicherstand').textContent = blaetter.length + (blaetter.length === 1 ? ' Blatt' : ' Blätter') + ' in diesem Browser';
+  }
+  formularFuellen();
+  (async () => {
+    if (!window.claude) return lokalStarten();
+    [db, sample, downloads] = await Promise.all([claude.use('db'), claude.use('sample'), claude.use('downloads')]);
+    $('ue-vorschlag').hidden = !sample;
+    if (!db) return lokalStarten();
+    let erstes = true;
+    db.collection('blaetter').orderBy('geaendert', 'desc').onSnapshot(snap => {
+      blaetter = snap.docs.map(d => d.data()).filter(Boolean);
+      if (erstes && blaetter.length) { sheet = JSON.parse(JSON.stringify(blaetter[0])); formularFuellen(); }
+      erstes = false;
+      $('speicherstand').textContent = blaetter.length + (blaetter.length === 1 ? ' Blatt' : ' Blätter') + ' in der Sammlung';
+      listeZeichnen();
+    }, err => { $('speicherstand').textContent = 'Sammlung nicht erreichbar (' + (err.code || 'Fehler') + ')'; });
+  })();
+})();
+</script>

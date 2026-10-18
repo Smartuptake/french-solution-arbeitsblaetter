@@ -23,6 +23,12 @@ const idx = `<!doctype html><html lang="de"><meta charset="utf-8"><meta name="vi
 ul{list-style:none;padding:0;display:grid;gap:10px}li{background:#fff;border:1px solid #D9DEEA;border-radius:10px;padding:12px 14px}a{color:#1C2B5A;font-weight:700}small{display:block;color:#5B6585}</style>
 <main><h1>French Solution · Arbeitsblätter</h1><p>Schülerfassungen zum Ausfüllen im Browser. Am Ende „Als PDF speichern“ und in Moodle abgeben.</p><ul>
 ${liste.map(s => `<li><a href="blaetter/${s.id}.html">${B.esc(s.titel)}</a><small>Klasse ${B.esc(s.klasse)} · ${s.lernjahr}. Lernjahr · ${B.esc(s.thema)}</small></li>`).join('\n')}
-</ul></main></html>`;
+</ul><p><small>Für Lehrkräfte: <a href="generator/">Arbeitsblatt-Generator (Offline-Fassung)</a></small></p></main></html>`;
 fs.writeFileSync(path.join(ziel, 'index.html'), idx);
+// Generator (Offline-Fassung für Lehrkräfte): gleiche Seite wie auf claude.ai, speichert im Browser
+const gz = path.join(ziel, 'generator'); fs.mkdirSync(gz, { recursive: true });
+fs.writeFileSync(path.join(gz, 'index.html'), '<!doctype html><html lang="de"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{margin:0}</style></head><body>'
+  + fs.readFileSync(path.join(root, 'generator.html'), 'utf8') + '</body></html>');
+fs.copyFileSync(path.join(root, 'blatt.js'), path.join(gz, 'blatt.js'));
+fs.cpSync(path.join(root, 'assets'), path.join(gz, 'assets'), { recursive: true });
 console.log('ok', liste.length, 'Blätter →', ziel);

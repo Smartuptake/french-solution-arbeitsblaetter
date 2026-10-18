@@ -5,5 +5,6 @@ offline lauffähige Schülerfassungen (Schriften und Icons eingebettet), die Sch
 als PDF speichern und in Moodle abgeben.
 
 - Übersicht: https://smartuptake.github.io/french-solution-arbeitsblaetter/
+- Generator (Offline-Fassung, speichert im Browser): https://smartuptake.github.io/french-solution-arbeitsblaetter/generator/ – die Fassung mit gemeinsamer Sammlung, Claude-Vorschlägen und Word-Endfassung liegt auf claude.ai
 - Bauen (in der Werkstatt `~/Documents/MM-Werkstatt/fs-arbeitsblatt-generator`): `node tools/build.mjs ~/GitHub/french-solution-arbeitsblaetter/docs`
 - Renderer: `blatt.js` (gemeinsam mit dem Generator auf claude.ai)
