@@ -171,8 +171,10 @@ input[type=checkbox],input[type=radio]{accent-color:var(--navy);width:16px;heigh
         <div class="f breit"><span>Bausteine</span><div class="wahl">
           <label><input type="checkbox" id="r-p" data-bool="reflexion.prozess"> Selbstreflexion Arbeitsprozess</label>
           <label><input type="checkbox" id="r-e" data-bool="reflexion.ergebnis"> Selbstreflexion Arbeitsergebnis</label>
+          <label><input type="checkbox" id="r-sw" data-bool="reflexion.staerken"> Stärken und Schwächen</label>
           <label><input type="checkbox" id="r-ev" data-bool="evaluation"> Aufgaben-Evaluation</label>
-        </div><span class="hinw">Standard-Reflexion (14.10.2026); Rückmeldung der Lehrkraft erscheint, wenn „Rückmeldung ohne Note“ gewählt ist.</span></div>
+        </div><span class="hinw">Standard-Reflexion (14.10.2026) und Stärken/Schwächen-Bogen (18.10.2026); Rückmeldung der Lehrkraft erscheint, wenn „Rückmeldung ohne Note“ gewählt ist.</span></div>
+        <label class="f breit" id="sw-feld"><span>Stärken und Schwächen <em>ein Punkt pro Zeile – nicht passende löschen</em></span><textarea id="sw-items" rows="6" data-lines="staerkenItems"></textarea></label>
         <label class="f breit"><span>Wie geht es weiter?</span><textarea id="weiter" data-k="weiter"></textarea></label>
       </div>
     </details>
@@ -259,6 +261,7 @@ input[type=checkbox],input[type=radio]{accent-color:var(--navy);width:16px;heigh
 
   // ---------- Formular füllen ----------
   function formularFuellen() {
+    if (!sheet.staerkenItems || !sheet.staerkenItems.length) sheet.staerkenItems = B.STAERKEN.slice();
     document.querySelectorAll('[data-k]').forEach(el => {
       const v = get(sheet, el.dataset.k);
       if (el.type === 'radio') el.checked = String(v) === el.value; else el.value = v == null ? '' : v;
@@ -268,13 +271,13 @@ input[type=checkbox],input[type=radio]{accent-color:var(--navy);width:16px;heigh
     document.querySelectorAll('[data-lines]').forEach(el => { el.value = (get(sheet, el.dataset.lines) || []).join('\n'); });
     rasterZeichnen(); uebungenZeichnen(); sichtbarkeit(); vorschau();
   }
-  function sichtbarkeit() { $('raster-feld').hidden = !(sheet.bewertung.arten || []).includes('raster'); }
+  function sichtbarkeit() { $('raster-feld').hidden = !(sheet.bewertung.arten || []).includes('raster'); $('sw-feld').hidden = (sheet.reflexion || {}).staerken === false; }
 
   document.querySelector('.ed').addEventListener('input', e => {
     const el = e.target;
     if (el.dataset.k) { if (el.type === 'radio' && !el.checked) return; set(sheet, el.dataset.k, el.dataset.num ? Number(el.value) : el.value); }
     else if (el.dataset.arr) { const arr = new Set(get(sheet, el.dataset.arr) || []); el.checked ? arr.add(el.value) : arr.delete(el.value); set(sheet, el.dataset.arr, [...arr]); sichtbarkeit(); }
-    else if (el.dataset.bool) set(sheet, el.dataset.bool, el.checked);
+    else if (el.dataset.bool) { set(sheet, el.dataset.bool, el.checked); sichtbarkeit(); }
     else if (el.dataset.lines) set(sheet, el.dataset.lines, el.value.split('\n').map(s => s.trim()).filter(Boolean));
     else if (el.dataset.raster) { const [i, j] = el.dataset.raster.split(':').map(Number); const r = sheet.bewertung.raster[i]; if (j < 0) r.kriterium = el.value; else r.stufen[j] = el.value; }
     else if (el.dataset.u) uebungEingabe(el);

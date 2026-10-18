@@ -72,9 +72,17 @@
   const UEBUNGSTYPEN = { luecken: 'luecken-fuellen', zuordnen: 'zuordnen', uebersetzen: 'uebersetzen', fragen: 'fragen-beantworten', schreiben: 'schreiben', frei: 'dokument', zeichen: 'schriftzeichen' };
   const HINDERNISSE = ['Handy / Ablenkung', 'Stress', 'zu wenig Zeit eingeplant', 'kein ruhiger Arbeitsplatz', 'Aufgabe unklar', 'keine Lust', 'Sonstiges: ______'];
   const BRAUCHE = ['mehr Zeit zum Prüfen', 'mehr Übungen', 'weitere Erklärungen', 'Sonstiges: ______'];
+  // Stärken und Schwächen (Stefan 18.10.2026: Items 1–7; 8–11 Vorschläge, je Blatt abwählbar)
+  const STAERKEN = ['Fokussiert arbeiten, ohne mich ablenken zu lassen', 'Der Wille, Aufgaben und Übungen wirklich gut und umfangreich zu erledigen',
+    'Der Wille, den Dingen auf den Grund zu gehen und wirklich zu verstehen, worum es geht', 'Disziplin beim Erledigen von Aufgaben', 'Durchhaltevermögen beim Erledigen von Aufgaben',
+    'Komplexere Aufgaben und Arbeitsprozesse strukturieren (Was erledige ich zuerst? Womit mache ich weiter?)',
+    'Selbsteinschätzung: mein Arbeitsverhalten, meine Einstellung und meine Ergebnisse realistisch einschätzen',
+    'Fragen stellen und mir rechtzeitig Hilfe holen', 'Sorgfalt: Ergebnisse kontrollieren und Fehler verbessern', 'Zeit realistisch planen und Termine einhalten', 'Aus Fehlern lernen, statt aufzugeben'];
+  const SW_SKALA = ['klare Stärke', 'eher Stärke', 'eher Schwäche', 'klare Schwäche'];
 
   // Linien-Icons für die neuen Felder (Präsentation, Bewertung, Aufgaben-Evaluation) im Stil der Block-Icons
   const SVG = {
+    staerken: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20V8"/><path d="M3.5 11.5 7 8l3.5 3.5"/><path d="M17 4v12"/><path d="M13.5 12.5 17 16l3.5-3.5"/><path d="M3 20h18"/></svg>',
     praesentation: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h18"/><path d="M4 4v10a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V4"/><path d="M12 16v4"/><path d="M9 20h6"/><path d="M8 12l3-3 2 2 3-3"/></svg>',
     bewertung: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="9" r="6"/><path d="M9 14.5 7.5 21 12 18.5 16.5 21 15 14.5"/><path d="M10 9l1.5 1.5L14.5 7.5"/></svg>',
     evaluation: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 3v2h6V3"/><path d="M8.5 10h1"/><path d="M12 10h3.5"/><path d="M8.5 14h1"/><path d="M12 14h3.5"/><path d="M8.5 18h7"/></svg>'
@@ -217,6 +225,17 @@
         + `<div class="rq">ja → Mein Tipp für andere · nein → Woran lag es?</div>${zeilen(1, m, 'r-tipp')}`
         + `<div class="rq">Beim nächsten Mal nehme ich mir vor … – und daran sieht man es:</div>${zeilen(2, m, 'r-vors')}</div>`);
     }
+    if (r.staerken !== false) {   // Stärken und Schwächen: Einschätzung je Item, dann Plan (Stärke ausbauen / Schwäche verbessern / Nachweis)
+      const items = (sheet.staerkenItems && sheet.staerkenItems.length ? sheet.staerkenItems : STAERKEN);
+      const sks = (t, name) => `<tr><td>${t}</td>` + SW_SKALA.map((s, i) => `<td class="sk">${m === 'schueler' ? `<input type="radio" name="${name}" value="${i}" aria-label="${s}">` : '<span class="bx"></span>'}<small>${s}</small></td>`).join('') + '</tr>';
+      const zelle = (name) => m === 'schueler' ? `<textarea class="sch-ta" name="${name}" rows="2" aria-label="Eintrag"></textarea>` : '';
+      const zeile = (lab, k) => `<tr><th>${lab}</th><td>${zelle(k + '-a')}</td><td>${zelle(k + '-b')}</td><td>${zelle(k + '-c')}</td></tr>`;
+      z.push(`<div class="rf sw">${titel('', P === 'mm' ? ['Stärken und Schwächen', '优点和缺点 · yōudiǎn hé quēdiǎn'] : ['Mes points forts et points faibles', 'Stärken und Schwächen'], 'staerken')}`
+        + `<div class="rq">Wo liegen meine Stärken, wo meine Schwächen? Kreuze bei jedem Punkt an.</div><table class="skt">${items.map((t, i) => sks(esc(t), 'sw' + i)).join('')}</table>`
+        + `<div class="rq">Wähle zwei Stärken und zwei Schwächen aus und plane konkret:</div>`
+        + `<table class="swt"><tr><th></th><th>Meine Stärke bzw. Schwäche</th><th>So baue ich die Stärke aus · So verbessere ich mich</th><th>Daran sieht man es (bis wann?)</th></tr>`
+        + zeile('Stärke 1', 'sw-s1') + zeile('Stärke 2', 'sw-s2') + zeile('Schwäche 1', 'sw-w1') + zeile('Schwäche 2', 'sw-w2') + '</table></div>');
+    }
     if (sheet.evaluation !== false) {
       z.push(`<div class="rf">${P === 'mm' ? titel('rueckmeldung', M.r.eval) : titel('', M.r.eval, 'evaluation')}`
         + `<table class="skt">${M.eval.map((e, i) => skz(P === 'mm' ? esc(e[0]) : `${F(e[0])} <small>${e[1]}</small>`, 'e' + i)).join('')}</table>`
@@ -277,6 +296,7 @@
 .fsb .nach{background:var(--clair)}.fsb .rf{padding:2mm 4mm;border-top:.5pt solid #C9D0DE}.fsb .rt{font-family:Fredoka,sans-serif;font-weight:600;color:var(--navy);font-size:10.5pt;display:flex;align-items:center;gap:2mm}.fsb .rt img{width:5mm}.fsb .rt span{font-family:Nunito,sans-serif;font-weight:400;font-size:8.5pt;color:var(--grau)}
 .fsb .rq{font-size:9pt;margin:1.5mm 0 0;display:flex;flex-wrap:wrap;gap:1mm 3mm;align-items:center}.fsb .rf .lin div{height:7mm}
 .fsb .skt td{font-size:9pt;padding:.8mm 1mm}.fsb .skt td.sk{text-align:center;width:15mm;font-size:7pt;color:var(--grau)}.fsb .skt td.sk .bx,.fsb .skt td.sk input{display:block;margin:0 auto .5mm}
+.fsb .swt{margin-top:1.5mm;font-size:8.5pt;background:#fff}.fsb .swt th{text-align:left;color:var(--navy);padding:1mm 1.5mm;border:.5pt solid #C9D0DE;vertical-align:top;font-weight:700}.fsb .swt td{border:.5pt solid #C9D0DE;height:13mm;padding:1mm;vertical-align:top}.fsb .swt tr>th:first-child{width:21mm}.fsb .swt .sch-ta{border:0;min-height:11mm}.fsb .sw .skt td:first-child{font-size:8.8pt}
 .fsb .bsp{font-size:8.5pt;color:var(--navy);padding:2mm 4mm;border-top:.5pt solid #C9D0DE}
 .fsb .ff{margin-top:6mm;font-size:7.5pt;color:var(--grau);border-top:.5pt solid #DDE2EC;padding-top:1.5mm}
 .fsb .sch-in{font:inherit;border:0;border-bottom:1pt solid var(--navy);background:#F6F8FD;padding:0 1mm;color:var(--navy);font-weight:700}.fsb .sch-in.kurz{width:10mm;text-align:center}
@@ -334,6 +354,6 @@ var w=false;document.getElementById('leeren').onclick=function(){if(!w){w=true;t
   // alle Hanzi eines Blatts (für Schrift-Teilmengen beim Einbetten)
   const zeichenListe = sheet => [...new Set((JSON.stringify(sheet).match(/[㐀-鿿　-〿！-～]/g) || []).concat('开始以前成果完成以后练习评分标准'.split('')))].join('');
 
-  const api = { render, standalone, CSS, F, esc, zh, istCJK, zeichenListe, MARKE, UEBUNGSTYPEN, SOZIAL, MEDIUM, PRAES, BEWERTUNG, punkteSumme };
+  const api = { STAERKEN, render, standalone, CSS, F, esc, zh, istCJK, zeichenListe, MARKE, UEBUNGSTYPEN, SOZIAL, MEDIUM, PRAES, BEWERTUNG, punkteSumme };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.FSBlatt = api;
 })(typeof window !== 'undefined' ? window : globalThis);
