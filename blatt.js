@@ -20,7 +20,7 @@
   const SKALA = ['tout à fait', 'plutôt oui', 'plutôt non', 'pas du tout'];
   const SKALA_DE = ['trifft voll zu', 'eher ja', 'eher nein', 'gar nicht'];
   const UEBUNGSTYPEN = { luecken: 'luecken-fuellen', zuordnen: 'zuordnen', uebersetzen: 'uebersetzen', fragen: 'fragen-beantworten', schreiben: 'schreiben', frei: 'dokument' };
-  const EVAL = [['La consigne était claire.', 'Die Aufgabe war verständlich.'], ['La difficulté était bonne pour moi.', 'Der Schwierigkeitsgrad hat für mich gepasst.'],
+  const EVAL = [['La consigne était claire.', 'Die Aufgabe war verständlich.'], ['Le niveau de difficulté me convenait.', 'Der Schwierigkeitsgrad hat für mich gepasst.'],
                 ['La tâche était intéressante.', 'Die Aufgabe war interessant.'], ['Le temps était suffisant.', 'Die Zeit hat gepasst.']];
   const HINDERNISSE = ['Handy / Ablenkung', 'Stress', 'zu wenig Zeit eingeplant', 'kein ruhiger Arbeitsplatz', 'Aufgabe unklar', 'keine Lust', 'Sonstiges: ______'];
   const BRAUCHE = ['mehr Zeit zum Prüfen', 'mehr Übungen', 'weitere Erklärungen', 'Sonstiges: ______'];
