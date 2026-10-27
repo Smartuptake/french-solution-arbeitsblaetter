@@ -457,15 +457,18 @@ schreiben {"checkliste": ["deutscher Punkt", ...], "zeilen": 12, "muster": "fran
     try { await downloads.save({ filename: name, data }); melden('Gespeichert: ' + name, 'ok'); }
     catch (err) { melden(err && err.code === 'declined' ? 'Speichern abgebrochen.' : 'Speichern nicht möglich (' + (err && err.code || 'Fehler') + ').', err && err.code === 'declined' ? '' : 'fehler'); }
   }
+  // html2canvas erlaubt (Unicode-Regel) keinen Umbruch vor / ) ! ? ; : » usw., der Browser schon → Wörter übereinander.
+  // Für das PDF das Leerzeichen davor schützen, dann brechen Browser und PDF gleich um (27.10.2026).
+  const umbruchAngleichen = el => { const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT); let n; while ((n = w.nextNode())) n.nodeValue = n.nodeValue.replace(/ (?=[\/)\]}!?;:,.%»])/g, '\u00a0'); };
   async function pdf(m) {
     if (!window.html2pdf) return melden('Die PDF-Erzeugung konnte nicht geladen werden. Fordern Sie die Endfassung an – ich erstelle PDF und Word.', 'fehler');
     melden('PDF wird erzeugt …');
     const box = document.createElement('div'); box.style.cssText = 'position:fixed;left:-10000px;top:0;width:186mm;background:#fff';
-    box.innerHTML = B.render(sheet, { modus: m, asset: n => 'assets/' + n }); document.body.appendChild(box);
+    box.innerHTML = '<style>.fsb *{text-wrap:wrap!important}</style>' + B.render(sheet, { modus: m, asset: n => 'assets/' + n }); document.body.appendChild(box); umbruchAngleichen(box.lastElementChild);   // html2canvas kennt text-wrap:balance nicht → Wörter übereinander (27.10.)
     try {
       await document.fonts.ready;
       const blob = await window.html2pdf().set({ margin: [12, 12, 14, 12], image: { type: 'jpeg', quality: 0.95 }, html2canvas: { scale: 2, useCORS: true, backgroundColor: '#ffffff', scrollX: 0, scrollY: 0 },   // ohne scrollX/Y: leeres PDF, wenn die Seite gescrollt ist (27.10.)
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: ['css', 'legacy'], avoid: ['.ue', '.blk', '.rf', '.br', 'tr', 'li'] } }).from(box.firstElementChild).outputPdf('blob');
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }, pagebreak: { mode: ['css', 'legacy'], avoid: ['.ue', '.blk', '.rf', '.br', 'tr', 'li'] } }).from(box.lastElementChild).outputPdf('blob');
       await speichernDatei(dateiname(m === 'loesung' ? '-Loesung.pdf' : '.pdf'), blob);
     } catch (err) { melden('PDF-Erzeugung fehlgeschlagen. Fordern Sie die Endfassung an.', 'fehler'); }
     finally { box.remove(); }
