@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Selbstreflexion 14b · French Solution</title>
+<link rel="icon" href="../assets/fs-favicon.png">
+<link rel="stylesheet" href="../assets/reflexion.css">
+</head>
+<body>
+<header class="kopf"><img src="../assets/fs-logo-quer.png" alt="French Solution"><h1 id="titel">Selbstreflexion</h1></header>
+<main>
+  <section class="karte">
+    <h2>Wie habe ich heute gearbeitet ?</h2>
+    <p class="hinweis">Denke an die Stunde zurück und antworte ehrlich. Es gibt keine falschen Antworten. Deine Antworten sieht nur deine Lehrkraft.</p>
+    <div class="zeile2">
+      <label class="feld">Vorname<input type="text" id="name" autocomplete="given-name"></label>
+      <label class="feld">Klasse<input type="text" id="klasse" value="8b"></label>
+    </div>
+  </section>
+
+  <section class="karte">
+    <h2>Mein Arbeitsprozess <small>pro Aussage ein Feld</small></h2>
+    <div id="aussagen"></div>
+  </section>
+
+  <section class="karte">
+    <h2>Bist du mit deiner Arbeit heute zufrieden ?</h2>
+    <div class="janein" id="zufrieden" role="radiogroup" aria-label="zufrieden"></div>
+    <div class="unter" id="ja-box" hidden><p class="hinweis">oui – weil … <small>(mehrere möglich)</small></p><div class="liste" id="ja"></div></div>
+    <div class="unter" id="nein-box" hidden><p class="hinweis">non – weil … <small>(mehrere möglich)</small></p><div class="liste" id="nein"></div></div>
+    <div class="unter"><label class="feld">Sonstiges (Grund)<input type="text" id="sonst-grund"></label></div>
+  </section>
+
+  <section class="karte">
+    <h2>Was brauche ich noch zu diesem Thema ?</h2>
+    <div class="liste" id="brauche"></div>
+    <div class="unter"><label class="feld">Nächstes Mal mache ich anders:<textarea id="naechstes"></textarea></label></div>
+  </section>
+
+  <section class="karte">
+    <div class="reihe"><button type="button" class="knopf" id="fertig">Fertig – Antwort erstellen</button></div>
+    <p class="meldung" id="meldung" role="status"></p>
+  </section>
+
+  <section class="karte" id="abgabe" hidden>
+    <h2>Abgeben</h2>
+    <ol class="schritte">
+      <li><b>Datei:</b> <button type="button" class="knopf zw" id="laden">Antwort-Datei speichern</button> und in Moodle bei der Aufgabe „Selbstreflexion 14b“ hochladen.</li>
+      <li style="margin-top:10px"><b>Oder Code:</b> <button type="button" class="knopf zw" id="kopieren">Code kopieren</button> und in Moodle als Text abgeben. <span class="meldung ok" id="kopiert"></span>
+        <div class="code" id="code" style="margin-top:8px"></div></li>
+    </ol>
+  </section>
+</main>
+<script src="bogen.js"></script>
+<script src="../assets/bogen-ui.js"></script>
+</body>
+</html>

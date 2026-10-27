@@ -1,0 +1,70 @@
+/* Selbstreflexion French Solution: Bogen (Schüler) und Auswertung (Lehrkraft); Schriften lokal, damit es in Peking ohne Google Fonts läuft */
+@font-face{font-family:Fredoka;src:url(Fredoka.ttf) format('truetype');font-weight:300 700;font-display:swap}
+@font-face{font-family:Nunito;src:url(Nunito.ttf) format('truetype');font-weight:200 900;font-display:swap}
+:root{--navy:#1C2B5A;--rouge:#E2383F;--clair:#EEF1F7;--linie:#C9CED9;--grau:#5C5C5C;--bg:#F6F7FB;--weiss:#fff;--ok:#1F7A4D;color-scheme:light}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:#1a1a1a;font-family:Nunito,'Segoe UI',Arial,sans-serif;font-size:16px;line-height:1.45}
+.kopf{background:var(--weiss);border-bottom:3px solid var(--navy);padding:12px max(16px,env(safe-area-inset-left,0px));display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.kopf img{height:46px}
+.kopf h1{font-family:Fredoka,Nunito,sans-serif;font-weight:600;color:var(--navy);font-size:21px;margin:0;line-height:1.15}
+.kopf h1 small{display:block;font-family:Nunito,sans-serif;font-weight:400;font-size:13.5px;color:var(--grau)}
+main{max-width:860px;margin:0 auto;padding:18px max(16px,env(safe-area-inset-left,0px)) 40px}
+.karte{background:var(--weiss);border:1px solid var(--linie);border-radius:12px;padding:16px 18px;margin-bottom:16px}
+.karte h2{font-family:Fredoka,Nunito,sans-serif;font-weight:600;color:var(--navy);font-size:18px;margin:0 0 8px}
+.karte h2 small{font-family:Nunito,sans-serif;font-weight:400;color:var(--grau);font-size:13px;margin-left:6px}
+.hinweis{color:var(--grau);font-size:14px;margin:0 0 10px}
+label.feld{display:flex;flex-direction:column;gap:4px;font-weight:700;color:var(--navy);font-size:14px}
+input[type=text],textarea{font:inherit;font-weight:400;color:#1a1a1a;border:1px solid var(--linie);border-radius:8px;padding:9px 11px;width:100%;background:#fff}
+textarea{min-height:76px;resize:vertical}
+input:focus-visible,textarea:focus-visible,button:focus-visible,.wahl input:focus-visible+span{outline:3px solid var(--rouge);outline-offset:2px}
+.zeile2{display:grid;grid-template-columns:2fr 1fr;gap:12px}
+@media (max-width:560px){.zeile2{grid-template-columns:1fr}}
+/* Aussage mit vier Stufen (ohne Mitte) */
+.aussage{border-top:1px solid var(--linie);padding:12px 0}
+.aussage:first-of-type{border-top:0}
+.aussage .k{display:inline-block;font-family:Fredoka,Nunito,sans-serif;font-weight:600;font-size:12px;color:var(--navy);background:var(--clair);border-radius:6px;padding:1px 8px;margin-bottom:4px}
+.aussage p{margin:0 0 8px}
+.stufen{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.wahl{position:relative;display:block;cursor:pointer}
+.wahl input{position:absolute;opacity:0;inset:0}
+.wahl span{display:block;text-align:center;border:1.5px solid var(--linie);border-radius:9px;padding:7px 4px;font-size:13px;line-height:1.2;background:#fff}
+.wahl span b{display:block;font-family:Fredoka,Nunito,sans-serif;font-size:17px;color:var(--navy)}
+.wahl input:checked+span{border-color:var(--navy);background:var(--navy);color:#fff}
+.wahl input:checked+span b{color:#fff}
+.liste{display:flex;flex-wrap:wrap;gap:8px}
+.liste .wahl span{padding:7px 12px;text-align:left}
+.janein{display:flex;gap:10px}
+.janein .wahl span{min-width:96px;font-family:Fredoka,Nunito,sans-serif;font-size:17px;font-weight:600;color:var(--navy)}
+.unter{margin-top:12px}
+.unter[hidden]{display:none}
+.knopf{font:inherit;font-family:Fredoka,Nunito,sans-serif;font-weight:600;font-size:17px;border:0;border-radius:10px;padding:11px 20px;background:var(--navy);color:#fff;cursor:pointer}
+.knopf.zw{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+.knopf:disabled{opacity:.5;cursor:not-allowed}
+.reihe{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.meldung{font-size:14px;margin:8px 0 0}
+.meldung.fehler{color:var(--rouge)}.meldung.ok{color:var(--ok)}
+.code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;word-break:break-all;background:var(--clair);border-radius:8px;padding:10px;max-height:140px;overflow:auto;user-select:all}
+.schritte{margin:6px 0 0;padding-left:22px}
+/* Auswertung */
+.balken{display:grid;grid-template-columns:minmax(0,1fr) 46%;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--linie)}
+.balken:first-of-type{border-top:0}
+@media (max-width:640px){.balken{grid-template-columns:1fr}}
+.balken .t{font-size:14px}.balken .t .k{display:inline-block;font-family:Fredoka,Nunito,sans-serif;font-weight:600;font-size:11px;color:var(--navy);background:var(--clair);border-radius:5px;padding:0 6px;margin-right:4px}
+.stapel{display:flex;height:24px;border-radius:6px;overflow:hidden;background:#EEF0F4}
+.stapel div{display:grid;place-items:center;color:#fff;font-size:12px;font-weight:700;min-width:0}
+.leg{display:flex;flex-wrap:wrap;gap:12px;font-size:13px;margin:4px 0 10px}
+.leg i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.hbar{display:grid;grid-template-columns:minmax(0,1fr) 50% 32px;gap:8px;align-items:center;font-size:14px;padding:3px 0}
+.hbar .bar{height:16px;border-radius:4px;background:var(--navy)}
+.hbar .bar.rot{background:var(--rouge)}
+.zahl{font-family:Fredoka,Nunito,sans-serif;font-weight:600;color:var(--navy)}
+table.tab{border-collapse:collapse;width:100%;font-size:13px}
+table.tab th,table.tab td{border:1px solid var(--linie);padding:5px 7px;text-align:left;vertical-align:top}
+table.tab th{background:var(--clair);color:var(--navy)}
+.ablage{border:2px dashed var(--navy);border-radius:12px;padding:22px;text-align:center;background:#fff;color:var(--navy)}
+.ablage.ueber{background:var(--clair)}
+.kacheln{display:flex;flex-wrap:wrap;gap:12px}
+.kachel{background:var(--clair);border-radius:10px;padding:10px 14px;min-width:120px}
+.kachel b{display:block;font-family:Fredoka,Nunito,sans-serif;font-size:26px;color:var(--navy);line-height:1.1}
+.kachel span{font-size:13px;color:var(--grau)}
+@media print{.kopf{border-bottom-width:2px}.knopf,.ablage,#eingabe{display:none!important}.karte{break-inside:avoid}}
