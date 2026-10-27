@@ -1,5 +1,5 @@
 // Selbstreflexionsbogen: baut das Formular aus window.BOGEN, speichert die Antwort als Datei und als Code (für die Abgabe in Moodle).
-// Es wird nichts an einen Server geschickt; die Lehrkraft wertet die abgegebenen Dateien/Codes auf auswertung.html aus.
+// Absenden an die Datenbank (speicher.js); geht das nicht (kein Netz), bleiben Datei und Code als Abgabe über Moodle.
 (() => {
   const B = window.BOGEN, $ = id => document.getElementById(id);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -44,13 +44,22 @@
 
   // Code: Kennung + Base64 des JSON (UTF-8)
   const zuCode = d => 'FSR1:' + btoa(unescape(encodeURIComponent(JSON.stringify(d))));
-  $('fertig').onclick = () => {
+  $('fertig').onclick = async () => {
     const d = lesen(), fehlt = d.stufen.map((v, i) => v == null ? i + 1 : 0).filter(Boolean);
     const m = $('meldung');
     if (!d.name) { m.className = 'meldung fehler'; m.textContent = 'Bitte trage deinen Vornamen ein.'; $('name').focus(); return; }
     if (fehlt.length) { m.className = 'meldung fehler'; m.textContent = 'Bitte kreuze noch an: Aussage ' + fehlt.join(', ') + '.'; return; }
     if (!d.zufrieden) { m.className = 'meldung fehler'; m.textContent = 'Bitte kreuze an, ob du zufrieden bist (oui / non).'; return; }
-    m.className = 'meldung ok'; m.textContent = 'Fertig! Gib jetzt deine Antwort ab (Schritt 1 oder 2 unten).';
+    $('fertig').disabled = true; m.className = 'meldung'; m.textContent = 'Wird gesendet …';
+    try {
+      await window.SPEICHER.senden(d);
+      m.className = 'meldung ok'; m.textContent = 'Danke! Deine Antwort ist angekommen. Du kannst die Seite jetzt schließen.';
+      $('fertig').textContent = 'Gesendet ✓'; try { localStorage.removeItem(MERK); } catch (e) {}
+      return;
+    } catch (e) {
+      $('fertig').disabled = false;
+      m.className = 'meldung fehler'; m.textContent = 'Senden hat nicht geklappt (keine Verbindung?). Versuche es gleich noch einmal oder gib deine Antwort unten als Datei oder Code ab.';
+    }
     const code = zuCode(d);
     $('code').textContent = code; $('abgabe').hidden = false;
     const datei = `reflexion-${B.id}-${d.name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-')}.json`;

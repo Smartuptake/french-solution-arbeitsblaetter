@@ -12,7 +12,7 @@
 <main>
   <section class="karte">
     <h2>Wie habe ich heute gearbeitet ?</h2>
-    <p class="hinweis">Denke an die Stunde zurück und antworte ehrlich. Es gibt keine falschen Antworten. Deine Antworten sieht nur deine Lehrkraft.</p>
+    <p class="hinweis">Denke an die Stunde zurück und antworte ehrlich. Es gibt keine falschen Antworten. Deine Antworten sieht nur deine Lehrkraft. Am Ende auf „Absenden“ tippen.</p>
     <div class="zeile2">
       <label class="feld">Vorname<input type="text" id="name" autocomplete="given-name"></label>
       <label class="feld">Klasse<input type="text" id="klasse" value="8b"></label>
@@ -39,12 +39,12 @@
   </section>
 
   <section class="karte">
-    <div class="reihe"><button type="button" class="knopf" id="fertig">Fertig – Antwort erstellen</button></div>
+    <div class="reihe"><button type="button" class="knopf" id="fertig">Absenden</button></div>
     <p class="meldung" id="meldung" role="status"></p>
   </section>
 
   <section class="karte" id="abgabe" hidden>
-    <h2>Abgeben</h2>
+    <h2>Abgeben ohne Verbindung</h2>
     <ol class="schritte">
       <li><b>Datei:</b> <button type="button" class="knopf zw" id="laden">Antwort-Datei speichern</button> und in Moodle bei der Aufgabe „Selbstreflexion 14b“ hochladen.</li>
       <li style="margin-top:10px"><b>Oder Code:</b> <button type="button" class="knopf zw" id="kopieren">Code kopieren</button> und in Moodle als Text abgeben. <span class="meldung ok" id="kopiert"></span>
@@ -53,6 +53,7 @@
   </section>
 </main>
 <script src="bogen.js"></script>
+<script src="../assets/speicher.js"></script>
 <script src="../assets/bogen-ui.js"></script>
 </body>
 </html>

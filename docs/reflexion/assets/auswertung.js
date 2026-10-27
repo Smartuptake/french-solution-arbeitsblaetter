@@ -1,5 +1,5 @@
 // Auswertung der Selbstreflexion: Antwort-Dateien (.json) oder Codes (FSR1:…) einlesen und mit Diagrammen zeigen.
-// Alles bleibt in diesem Browser – es wird nichts hochgeladen (Datenschutz: Schülerantworten nicht ins öffentliche Repo).
+// Hauptweg: Lehrkraft meldet sich an (speicher.js) und lädt alle Antworten aus der Datenbank. Datei/Code-Abgaben kommen lokal dazu.
 (() => {
   const B = window.BOGEN, $ = id => document.getElementById(id);
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -84,5 +84,27 @@
       + antworten.slice().sort((x, y) => (x.name || '').localeCompare(y.name || '')).map(d => `<tr><td>${esc(d.name)}</td>${d.stufen.map((v, j) => `<td style="background:${v == null ? '#fff' : FARBEN[3 - v]}22;text-align:center">${v == null ? '' : esc(B.skala[3 - v][0])}</td>`).join('')}<td>${esc(d.zufrieden)}</td></tr>`).join('');
   }
   $('sort').addEventListener('change', zeichnen);
+
+  // Datenbank: anmelden, laden; Token nur für diese Sitzung (sessionStorage)
+  let token = null; try { token = sessionStorage.getItem('rf-token'); } catch (e) {}
+  async function ausDatenbank() {
+    const lm = $('login-meldung'); lm.className = 'meldung'; lm.textContent = 'Lade …';
+    try {
+      const db = await window.SPEICHER.laden(token, B.id);
+      const z = { neu: 0, ersetzt: 0, falsch: 0 }; db.forEach(d => z[aufnehmen(d)]++);
+      lm.className = 'meldung ok'; lm.textContent = `${db.length} Antwort${db.length === 1 ? '' : 'en'} aus der Datenbank geladen.`;
+      $('anmeldung').querySelector('form').hidden = true; $('neu-laden').hidden = false; merken(); zeichnen();
+    } catch (e) {
+      token = null; try { sessionStorage.removeItem('rf-token'); } catch (x) {}
+      lm.className = 'meldung fehler'; lm.textContent = 'Laden ging nicht – bitte neu anmelden.'; $('anmeldung').querySelector('form').hidden = false;
+    }
+  }
+  $('login').addEventListener('submit', async e => {
+    e.preventDefault(); const lm = $('login-meldung');
+    try { token = await window.SPEICHER.anmelden($('email').value.trim(), $('passwort').value); try { sessionStorage.setItem('rf-token', token); } catch (x) {} $('passwort').value = ''; ausDatenbank(); }
+    catch (err) { lm.className = 'meldung fehler'; lm.textContent = 'Anmeldung fehlgeschlagen: E-Mail oder Passwort prüfen.'; }
+  });
+  $('neu-laden').onclick = () => { antworten = []; ausDatenbank(); };
+  if (token) ausDatenbank();
   zeichnen();
 })();
