@@ -67,4 +67,13 @@ table.tab th{background:var(--clair);color:var(--navy)}
 .kachel{background:var(--clair);border-radius:10px;padding:10px 14px;min-width:120px}
 .kachel b{display:block;font-family:Fredoka,Nunito,sans-serif;font-size:26px;color:var(--navy);line-height:1.1}
 .kachel span{font-size:13px;color:var(--grau)}
-@media print{.kopf{border-bottom-width:2px}.knopf,.ablage,#eingabe{display:none!important}.karte{break-inside:avoid}}
+.diagramme2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media (max-width:700px){.diagramme2{grid-template-columns:1fr}}
+figure{margin:0}figcaption{font-family:Fredoka,Nunito,sans-serif;font-weight:600;color:var(--navy);font-size:15px;margin-bottom:6px}
+figcaption small{font-family:Nunito,sans-serif;font-weight:400;color:var(--grau);font-size:12.5px;margin-left:6px}
+.dg{position:relative;width:100%}
+.profile{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.profil{border:1px solid var(--linie);border-radius:10px;padding:8px 10px}
+.profil b{font-family:Fredoka,Nunito,sans-serif;color:var(--navy)}.profil small{color:var(--grau);margin-left:6px}
+.profil .dg{height:190px}
+@media print{.dg canvas{max-width:100%!important;height:auto!important}.kopf{border-bottom-width:2px}.knopf,.ablage,#eingabe{display:none!important}.karte{break-inside:avoid}}

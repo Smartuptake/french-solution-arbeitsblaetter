@@ -34,22 +34,27 @@
 
   <div id="ergebnis" hidden>
     <section class="karte"><h2>Überblick</h2><div class="kacheln" id="kacheln"></div>
+      <div class="diagramme2 unter"><figure><figcaption>Klassenprofil <small>Durchschnitt je Bereich, 100 % = alle „++“</small></figcaption><div class="dg" style="height:300px"><canvas id="radar"></canvas></div></figure>
+      <figure><figcaption>Zufrieden mit der eigenen Arbeit ?</figcaption><div class="dg" style="height:300px"><canvas id="donut"></canvas></div></figure></div>
       <div class="reihe unter"><button type="button" class="knopf zw" id="csv">Tabelle (CSV) speichern</button><button type="button" class="knopf zw" onclick="print()">Drucken / PDF</button></div></section>
     <section class="karte">
       <h2>Arbeitsprozess <small>Anzahl der Antworten je Stufe</small></h2>
-      <div class="leg" id="leg"></div>
+      <p class="hinweis">Links Ablehnung (– / – –), rechts Zustimmung (+ / ++), Anteil der Klasse in %. Mit der Maus über einen Balken fahren zeigt die Aussage und die Anzahl.</p>
       <label class="hinweis"><input type="checkbox" id="sort"> nach Schwächen sortieren (niedrigste Einschätzung zuerst)</label>
-      <div id="aussagen"></div>
+      <div class="dg" id="likert-box"><canvas id="likert"></canvas></div>
     </section>
-    <section class="karte"><h2>Zufrieden ?</h2><div id="zufrieden"></div>
-      <div class="zeile2 unter" style="grid-template-columns:1fr 1fr"><div><p class="hinweis">oui – weil …</p><div id="gruende-ja"></div></div><div><p class="hinweis">non – weil …</p><div id="gruende-nein"></div></div></div>
+    <section class="karte"><h2>Gründe für (Un-)Zufriedenheit</h2>
+      <div class="diagramme2"><figure><figcaption>oui – weil …</figcaption><div class="dg" style="height:230px"><canvas id="gruende-ja"></canvas></div></figure>
+      <figure><figcaption>non – weil …</figcaption><div class="dg" style="height:230px"><canvas id="gruende-nein"></canvas></div></figure></div>
     </section>
-    <section class="karte"><h2>Was brauchen die Schüler noch ?</h2><div id="brauche"></div></section>
+    <section class="karte"><h2>Was brauchen die Schüler noch ?</h2><div class="dg" style="height:190px"><canvas id="brauche"></canvas></div></section>
     <section class="karte"><h2>„Nächstes Mal mache ich anders“</h2><ul id="frei"></ul></section>
+    <section class="karte"><h2>Einzelprofile <small>für Feedbackgespräche</small></h2><div class="profile" id="profile"></div></section>
     <section class="karte"><h2>Einzelübersicht</h2><div style="overflow-x:auto"><table class="tab" id="tabelle"></table></div></section>
   </div>
 </main>
 <script src="bogen.js"></script>
+<script src="../assets/chart.umd.min.js"></script>
 <script src="../assets/speicher.js"></script>
 <script src="../assets/auswertung.js"></script>
 </body>
