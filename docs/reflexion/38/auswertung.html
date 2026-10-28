@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Auswertung Selbstreflexion 38 · French Solution</title>
+<link rel="icon" href="../assets/fs-favicon.png">
+<link rel="stylesheet" href="../assets/reflexion.css">
+</head>
+<body>
+<header class="kopf"><img src="../assets/fs-logo-quer.png" alt="French Solution"><h1 id="titel">Auswertung</h1></header>
+<main>
+  <section class="karte" id="anmeldung">
+    <h2>Anmelden <small>Lehrer-Zugang (Supabase)</small></h2>
+    <form id="login" class="zeile2" style="grid-template-columns:1fr 1fr auto;align-items:end">
+      <label class="feld">E-Mail<input type="text" id="email" autocomplete="username"></label>
+      <label class="feld">Passwort<input type="password" id="passwort" autocomplete="current-password" style="font:inherit;border:1px solid var(--linie);border-radius:8px;padding:9px 11px"></label>
+      <button type="submit" class="knopf">Antworten laden</button>
+    </form>
+    <div class="reihe unter"><button type="button" class="knopf zw" id="neu-laden" hidden>Neu laden</button></div>
+    <p class="meldung" id="login-meldung" role="status"></p>
+  </section>
+
+  <details class="karte" id="eingabe">
+    <summary style="cursor:pointer;font-family:Fredoka,Nunito,sans-serif;font-weight:600;color:var(--navy)">Zusätzlich: Antworten aus Dateien oder Codes (falls ein Schüler ohne Verbindung abgegeben hat)</summary>
+    <p class="hinweis">Antwort-Dateien hineinziehen oder Codes einfügen. Sie werden zu den geladenen Antworten hinzugefügt (nur in diesem Browser).</p>
+    <label class="ablage" id="ablage">Dateien hierher ziehen oder <u>auswählen</u> (mehrere möglich)<input type="file" id="datei" accept=".json,.txt" multiple hidden></label>
+    <div class="unter"><label class="feld">Codes einfügen (beliebig viele, z. B. aus dem Moodle-Download)<textarea id="codes" placeholder="FSR1:…"></textarea></label></div>
+    <div class="reihe unter"><button type="button" class="knopf" id="codes-ok">Codes einlesen</button><button type="button" class="knopf zw" id="leeren">Alle entfernen</button></div>
+    <p class="meldung" id="meldung" role="status"></p>
+    <p class="hinweis" id="anzahl"></p>
+  </details>
+
+  <div id="ergebnis" hidden>
+    <section class="karte"><h2>Überblick</h2><div class="kacheln" id="kacheln"></div>
+      <div class="unter"><figure><figcaption>Klassenprofil <small>Durchschnitt je Bereich, 100 % = alle „++“</small></figcaption><div class="dg" style="height:300px"><canvas id="radar"></canvas></div></figure>
+</div>
+      <div class="reihe unter"><button type="button" class="knopf zw" id="csv">Tabelle (CSV) speichern</button><button type="button" class="knopf zw" onclick="print()">Drucken / PDF</button></div></section>
+    <section class="karte">
+      <h2>Selbsteinschätzung <small>Anzahl der Antworten je Stufe</small></h2>
+      <p class="hinweis">Links Ablehnung (– / – –), rechts Zustimmung (+ / ++), Anteil der Klasse in %. Mit der Maus über einen Balken fahren zeigt die Aussage und die Anzahl.</p>
+      <label class="hinweis"><input type="checkbox" id="sort"> nach Schwächen sortieren (niedrigste Einschätzung zuerst)</label>
+      <div class="dg" id="likert-box"><canvas id="likert"></canvas></div>
+    </section>
+    <section class="karte"><h2>Was brauchen die Schüler noch ?</h2><div class="dg" style="height:190px"><canvas id="brauche"></canvas></div></section>
+    <section class="karte"><h2>„Um nächstes Mal besser zu sein, werde ich …“</h2><div class="dg" style="height:190px"><canvas id="vorsatz"></canvas></div></section>
+    <section class="karte"><h2>Freitexte</h2><ul id="frei"></ul></section>
+    <section class="karte"><h2>Einzelprofile <small>für Feedbackgespräche</small></h2><div class="profile" id="profile"></div></section>
+    <section class="karte"><h2>Einzelübersicht</h2><div style="overflow-x:auto"><table class="tab" id="tabelle"></table></div></section>
+  </div>
+</main>
+<script src="bogen.js"></script>
+<script src="../assets/chart.umd.min.js"></script>
+<script src="../assets/speicher.js"></script>
+<script src="../assets/auswertung.js"></script>
+</body>
+</html>

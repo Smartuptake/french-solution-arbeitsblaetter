@@ -36,6 +36,9 @@ input:focus-visible,textarea:focus-visible,button:focus-visible,.wahl input:focu
 .janein{display:flex;gap:10px}
 .janein .wahl span{min-width:96px;font-family:Fredoka,Nunito,sans-serif;font-size:17px;font-weight:600;color:var(--navy)}
 .unter{margin-top:12px}
+.liste.spalte{flex-direction:column}
+.wahl.mitfeld input.inzeile{position:relative;z-index:1;opacity:1;display:inline-block;width:200px;max-width:100%;padding:4px 8px;margin-left:4px;font-size:14px}
+.wahl input:checked+span .inzeile{color:#1a1a1a}
 .unter[hidden]{display:none}
 .knopf{font:inherit;font-family:Fredoka,Nunito,sans-serif;font-weight:600;font-size:17px;border:0;border-radius:10px;padding:11px 20px;background:var(--navy);color:#fff;cursor:pointer}
 .knopf.zw{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}

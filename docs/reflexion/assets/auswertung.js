@@ -5,6 +5,8 @@
   const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const FARBEN = ['#1F7A4D', '#7BB662', '#F2A541', '#E2383F'];   // ++ + – – –
   const MERK = 'auswertung-' + B.id;
+  const mitZufrieden = B.zufrieden !== false;
+  const da = id => !!$(id);
   document.title = 'Auswertung · ' + B.titel + ' · ' + B.untertitel;
   $('titel').innerHTML = `Auswertung · ${esc(B.titel)}<small>${esc(B.untertitel)}</small>`;
   let antworten = [];
@@ -44,15 +46,16 @@
   };
   $('leeren').onclick = () => { if (confirm('Alle eingelesenen Antworten aus diesem Browser entfernen?')) { antworten = []; merken(); zeichnen(); } };
   $('csv').onclick = () => {
-    const kopf = ['Vorname', 'Klasse', 'Zeit', ...B.aussagen.map((a, i) => `${i + 1} ${a[0]}`), 'zufrieden', 'oui weil', 'non weil', 'Sonstiges', 'brauche', 'nächstes Mal'];
+    const kopf = ['Vorname', 'Klasse', 'Gruppe', 'Zeit', ...B.aussagen.map((a, i) => `${i + 1} ${a[0]}`), 'zufrieden', 'oui weil', 'non weil', 'Sonstiges', 'brauche', 'brauche frei', 'nächstes Mal', 'Vorsatz', 'Vorsatz Sonstiges'];
     const zelle = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
-    const zeilen = antworten.map(d => [d.name, d.klasse, d.zeit, ...d.stufen.map(v => B.skala[3 - v] ? B.skala[3 - v][0] : ''), d.zufrieden, d.ja.join('; '), d.nein.join('; '), d.sonstGrund, d.brauche.join('; '), d.naechstes]);
+    const L = x => (x || []).join('; ');
+    const zeilen = antworten.map(d => [d.name, d.klasse, d.gruppe, d.zeit, ...d.stufen.map(v => B.skala[3 - v] ? B.skala[3 - v][0] : ''), d.zufrieden, L(d.ja), L(d.nein), d.sonstGrund, L(d.brauche), [...Object.values(d.frei || {}), d.braucheSonst].filter(Boolean).join('; '), d.naechstes, L(d.vorsatz), d.vorsatzSonst]);
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob(['﻿' + [kopf, ...zeilen].map(z => z.map(zelle).join(';')).join('\n')], { type: 'text/csv' }));
     a.download = `auswertung-${B.id}.csv`; a.click();
   };
 
-  function zaehlen(feld, liste) { const m = {}; liste.concat(['Sonstiges']).forEach(x => m[x] = 0); antworten.forEach(d => (d[feld] || []).forEach(x => { m[x] = (m[x] || 0) + 1; })); return m; }
+  function zaehlen(feld, liste) { const m = {}; liste.map(x => x.replace(/\s*___/, '')).concat(['Sonstiges']).forEach(x => m[x] = 0); antworten.forEach(d => (d[feld] || []).forEach(x => { m[x] = (m[x] || 0) + 1; })); return m; }
   // Diagramme mit Chart.js (im Repository mitgeliefert, kein CDN)
   const NAVY = '#1C2B5A', ROT = '#E2383F', GRUEN = '#1F7A4D';
   const diagramme = {};
@@ -68,7 +71,7 @@
   function zeichnenDiagramme(n, ja) {
     if (!window.Chart) return;
     diagramm('radar', radarCfg(bereiche().map(k => prozentBereich(antworten, k)), NAVY));
-    diagramm('donut', { type: 'doughnut', data: { labels: ['oui', 'non'], datasets: [{ data: [ja, n - ja], backgroundColor: [GRUEN, ROT], borderWidth: 0 }] },
+    if (da('donut')) diagramm('donut', { type: 'doughnut', data: { labels: ['oui', 'non'], datasets: [{ data: [ja, n - ja], backgroundColor: [GRUEN, ROT], borderWidth: 0 }] },
       options: { cutout: '58%', plugins: { legend: { position: 'bottom' }, tooltip: { callbacks: { label: c => `${c.label}: ${c.raw} (${Math.round(c.raw / n * 100)} %)` } } } } });
     // Likert: zentrierte gestapelte Balken in % (Ablehnung links, Zustimmung rechts)
     const reihen = B.aussagen.map((a, i) => ({ a, i, m: mittel(i), z: [3, 2, 1, 0].map(v => antworten.filter(d => d.stufen[i] === v).length) }));
@@ -89,13 +92,14 @@
           tooltip: { callbacks: { title: c => { const r = reihen[c[0].dataIndex]; return `${r.i + 1}. ${r.a[1]}`; },
             label: c => { const r = reihen[c.dataIndex], z = r.z[c.dataset._z]; return `${c.dataset.label}: ${z} (${Math.round(pct(z))} %)`; } } } },
         scales: { x: { stacked: true, min: -100, max: 100, ticks: { callback: v => Math.abs(v) + ' %' } }, y: { stacked: true, grid: { display: false }, ticks: { font: { size: 12 } } } } } });
-    diagramm('gruende-ja', balkenCfg(zaehlen('ja', B.ja), GRUEN));
-    diagramm('gruende-nein', balkenCfg(zaehlen('nein', B.nein), ROT));
+    if (da('gruende-ja')) diagramm('gruende-ja', balkenCfg(zaehlen('ja', B.ja), GRUEN));
+    if (da('gruende-nein')) diagramm('gruende-nein', balkenCfg(zaehlen('nein', B.nein), ROT));
+    if (da('vorsatz') && B.vorsatz) diagramm('vorsatz', balkenCfg(zaehlen('vorsatz', B.vorsatz), GRUEN));
     diagramm('brauche', balkenCfg(zaehlen('brauche', B.brauche), NAVY));
     // Einzelprofile (kleine Netzdiagramme)
     Object.keys(diagramme).filter(k => k.startsWith('p-')).forEach(k => { diagramme[k].destroy(); delete diagramme[k]; });
     const sortiert = antworten.slice().sort((x, y) => (x.name || '').localeCompare(y.name || ''));
-    $('profile').innerHTML = sortiert.map((d, j) => `<div class="profil"><b>${esc(d.name)}</b><small>${d.zufrieden === 'oui' ? 'zufrieden' : d.zufrieden === 'non' ? 'nicht zufrieden' : ''}</small><div class="dg"><canvas id="p-${j}"></canvas></div></div>`).join('');
+    $('profile').innerHTML = sortiert.map((d, j) => `<div class="profil"><b>${esc(d.name)}</b><small>${d.gruppe ? 'Groupe ' + esc(d.gruppe) + ' ' : ''}${d.zufrieden === 'oui' ? 'zufrieden' : d.zufrieden === 'non' ? 'nicht zufrieden' : ''}</small><div class="dg"><canvas id="p-${j}"></canvas></div></div>`).join('');
     sortiert.forEach((d, j) => diagramm('p-' + j, radarCfg(bereiche().map(k => prozentBereich([d], k)), d.zufrieden === 'non' ? ROT : NAVY, true)));
   }
   function zeichnen() {
@@ -107,13 +111,14 @@
     mittel = i => { const v = antworten.map(d => d.stufen[i]).filter(x => x != null); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : 0; };
     const gesamt = B.aussagen.reduce((a, _, i) => a + mittel(i), 0) / B.aussagen.length;
     $('kacheln').innerHTML = `<div class="kachel"><b>${n}</b><span>Antworten</span></div>`
-      + `<div class="kachel"><b>${Math.round(ja / n * 100)} %</b><span>zufrieden (oui)</span></div>`
+      + (mitZufrieden ? `<div class="kachel"><b>${Math.round(ja / n * 100)} %</b><span>zufrieden (oui)</span></div>` : '')
       + `<div class="kachel"><b>${(gesamt / 3 * 100).toFixed(0)} %</b><span>Selbsteinschätzung gesamt<br>(100 % = alles „++“)</span></div>`;
     zeichnenDiagramme(n, ja);
-    const frei = antworten.filter(d => d.naechstes || d.sonstGrund);
-    $('frei').innerHTML = frei.length ? frei.map(d => `<li><b>${esc(d.name)}:</b> ${esc(d.naechstes)}${d.sonstGrund ? ` <i>(Sonstiges: ${esc(d.sonstGrund)})</i>` : ''}</li>`).join('') : '<li class="hinweis">Keine Freitexte.</li>';
-    $('tabelle').innerHTML = `<tr><th>Vorname</th>${B.aussagen.map((_, i) => `<th title="${esc(B.aussagen[i][1])}">${i + 1}</th>`).join('')}<th>zufrieden</th></tr>`
-      + antworten.slice().sort((x, y) => (x.name || '').localeCompare(y.name || '')).map(d => `<tr><td>${esc(d.name)}</td>${d.stufen.map((v, j) => `<td style="background:${v == null ? '#fff' : FARBEN[3 - v]}22;text-align:center">${v == null ? '' : esc(B.skala[3 - v][0])}</td>`).join('')}<td>${esc(d.zufrieden)}</td></tr>`).join('');
+    const ft = d => [d.naechstes, ...Object.values(d.frei || {}).map(v => 'Grammatik: ' + v), d.braucheSonst && 'brauche: ' + d.braucheSonst, d.vorsatzSonst && 'Vorsatz: ' + d.vorsatzSonst].filter(Boolean);
+    const frei = antworten.filter(d => ft(d).length || d.sonstGrund);
+    $('frei').innerHTML = frei.length ? frei.map(d => `<li><b>${esc(d.name)}:</b> ${ft(d).map(esc).join(' · ')}${d.sonstGrund ? ` <i>(Sonstiges: ${esc(d.sonstGrund)})</i>` : ''}</li>`).join('') : '<li class="hinweis">Keine Freitexte.</li>';
+    $('tabelle').innerHTML = `<tr><th>Vorname</th>${B.gruppen ? '<th>Gr.</th>' : ''}${B.aussagen.map((_, i) => `<th title="${esc(B.aussagen[i][1])}">${i + 1}</th>`).join('')}${mitZufrieden ? '<th>zufrieden</th>' : ''}</tr>`
+      + antworten.slice().sort((x, y) => (x.name || '').localeCompare(y.name || '')).map(d => `<tr><td>${esc(d.name)}</td>${B.gruppen ? `<td>${esc(d.gruppe)}</td>` : ''}${d.stufen.map((v, j) => `<td style="background:${v == null ? '#fff' : FARBEN[3 - v]}22;text-align:center">${v == null ? '' : esc(B.skala[3 - v][0])}</td>`).join('')}${mitZufrieden ? `<td>${esc(d.zufrieden)}</td>` : ''}</tr>`).join('');
   }
   $('sort').addEventListener('change', zeichnen);
 
