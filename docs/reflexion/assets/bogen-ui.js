@@ -6,11 +6,15 @@
   const MERK = 'reflexion-' + B.id;
   const val = id => $(id) ? $(id).value.trim() : '';   // Felder sind je Bogen optional (z. B. 38: ohne „zufrieden“)
   const mitZufrieden = B.zufrieden !== false && !!$('zufrieden');
+  // Bögen aus der Item-Bank (03.11.2026): B.abschnitte in fester Reihenfolge; Skalen-Aussagen laufen wie bisher über B.aussagen / stufen
+  const BAUSTEINE = B.abschnitte ? B.abschnitte.flatMap(a => a.items) : [];
+  if (B.abschnitte) B.aussagen = B.abschnitte.flatMap(a => a.items.filter(x => x.typ === 'skala').map(x => [a.titel, x.text]));
+  const satz = s => esc(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
   document.title = B.titel + ' · ' + B.untertitel;
   $('titel').innerHTML = `${esc(B.titel)}<small>${esc(B.untertitel)}</small>`;
 
   const wahl = (name, wert, inhalt, typ = 'radio') => `<label class="wahl"><input type="${typ}" name="${name}" value="${esc(wert)}"><span>${inhalt}</span></label>`;
-  $('aussagen').innerHTML = B.aussagen.map(([k, t], i) => `<div class="aussage"><span class="k">${esc(k)}</span><p>${i + 1}. ${esc(t)}</p>
+  if ($('aussagen')) $('aussagen').innerHTML = B.aussagen.map(([k, t], i) => `<div class="aussage"><span class="k">${esc(k)}</span><p>${i + 1}. ${esc(t)}</p>
     <div class="stufen" role="radiogroup" aria-label="Aussage ${i + 1}">${B.skala.map(([z, w], j) => wahl('a' + i, 3 - j, `<b>${esc(z)}</b>${esc(w)}`)).join('')}</div></div>`).join('');
   // Eintrag mit „___“: Textfeld in der Zeile (Name frei-<liste>-<nr>)
   const eintrag = (name, x, i) => x.includes('___')
@@ -28,7 +32,21 @@
       $('ja-box').hidden = z !== 'oui'; $('nein-box').hidden = z !== 'non';
     });
   }
-  $('brauche').innerHTML = liste('brauche', B.brauche);
+  if (B.brauche && $('brauche')) $('brauche').innerHTML = liste('brauche', B.brauche);
+  if (B.abschnitte && $('abschnitte')) {
+    let n = 0;
+    const text = (x, label, ph) => `<label class="feld unter">${label ? esc(label) : ''}<textarea id="t-${x.id}" rows="${x.zeilen || 2}" placeholder="${esc(ph || '')}" style="font:inherit;font-weight:400;border:1px solid var(--linie);border-radius:8px;padding:9px 11px"></textarea></label>`;
+    const baustein = x => {
+      if (x.typ === 'skala') { const i = n++; return `<div class="aussage"><p>${i + 1}. ${satz(x.text)}</p><div class="stufen" role="radiogroup" aria-label="Aussage ${i + 1}">${B.skala.map(([z, w], j) => wahl('a' + i, 3 - j, `<b>${esc(z)}</b>${esc(w)}`)).join('')}</div></div>`; }
+      if (x.typ === 'hinweis') return `<p class="hinweis">${satz(x.text)}</p>`;
+      const optionen = x.optionen || x.wege || [], mehr = x.typ === 'mehrfach';
+      return `<div class="aussage"><p>${satz(x.frage)}</p>`
+        + (optionen.length ? `<div class="liste${optionen.length > 3 ? ' spalte' : ''}">${optionen.map(o => wahl('w-' + x.id, o, satz(o), mehr ? 'checkbox' : 'radio')).join('')}</div>` : '')
+        + (x.typ === 'offen' || x.typ === 'lernweg' ? text(x, '', x.satzanfang) : x.nachfrage ? text(Object.assign({}, x, { zeilen: 1 }), x.nachfrage) : x.sonstiges ? text(Object.assign({}, x, { zeilen: 1 }), 'Sonstiges:') : '')
+        + '</div>';
+    };
+    $('abschnitte').innerHTML = B.abschnitte.map(a => `<section class="karte"><h2>${esc(a.titel)}${a.untertitel ? ` <small>${esc(a.untertitel)}</small>` : ''}</h2>${a.items.map(baustein).join('')}</section>`).join('');
+  }
   if (B.vorsatz && $('vorsatz')) $('vorsatz').innerHTML = liste('vorsatz', B.vorsatz);
   document.addEventListener('input', e => { if (e.target.classList && e.target.classList.contains('inzeile') && e.target.value.trim()) e.target.closest('label').querySelector('input[type=checkbox]').checked = true; });
 
@@ -42,7 +60,9 @@
       zufrieden: w('zufrieden')[0] || '', ja: w('ja'), nein: w('nein'), sonstGrund: val('sonst-grund'),
       brauche: w('brauche'), naechstes: val('naechstes'),
       frei: Object.fromEntries([...document.querySelectorAll('.inzeile')].map(x => [x.id, x.value.trim()]).filter(x => x[1])),
-      braucheSonst: val('brauche-sonst'), vorsatz: w('vorsatz'), vorsatzSonst: val('vorsatz-sonst')
+      braucheSonst: val('brauche-sonst'), vorsatz: w('vorsatz'), vorsatzSonst: val('vorsatz-sonst'),
+      wahl: Object.fromEntries(BAUSTEINE.filter(x => x.id && x.typ !== 'offen').map(x => [x.id, x.typ === 'mehrfach' ? w('w-' + x.id) : (w('w-' + x.id)[0] || '')])),
+      text: Object.fromEntries(BAUSTEINE.filter(x => x.id && $('t-' + x.id)).map(x => [x.id, val('t-' + x.id)]).filter(x => x[1]))
     };
   };
   const setzen = d => {
@@ -52,6 +72,8 @@
     const setze = (id, v) => { if ($(id)) $(id).value = v || ''; };
     setze('sonst-grund', d.sonstGrund); setze('naechstes', d.naechstes); setze('brauche-sonst', d.braucheSonst); setze('vorsatz-sonst', d.vorsatzSonst);
     Object.entries(d.frei || {}).forEach(([id, v]) => setze(id, v));
+    Object.entries(d.wahl || {}).forEach(([id, v]) => [].concat(v).forEach(x => { const el = document.querySelector(`[name="w-${id}"][value="${CSS.escape(x)}"]`); if (el) el.checked = true; }));
+    Object.entries(d.text || {}).forEach(([id, v]) => setze('t-' + id, v));
     if (mitZufrieden) $('zufrieden').dispatchEvent(new Event('change'));
   };
   try { const d = JSON.parse(localStorage.getItem(MERK) || 'null'); if (d) setzen(d); } catch (e) {}
@@ -65,6 +87,8 @@
     const m = $('meldung');
     if (!d.name) { m.className = 'meldung fehler'; m.textContent = 'Bitte trage deinen Vornamen ein.'; $('name').focus(); return; }
     if (fehlt.length) { m.className = 'meldung fehler'; m.textContent = 'Bitte kreuze noch an: Aussage ' + fehlt.join(', ') + '.'; return; }
+    const lw = BAUSTEINE.find(x => x.typ === 'lernweg' && (x.wege || []).length);
+    if (lw && !d.wahl[lw.id]) { m.className = 'meldung fehler'; m.textContent = 'Bitte wähle deinen Lernweg.'; return; }
     if (B.gruppen && $('gruppe') && !d.gruppe) { m.className = 'meldung fehler'; m.textContent = 'Bitte wähle deine Gruppe (A oder B).'; return; }
     if (mitZufrieden && !d.zufrieden) { m.className = 'meldung fehler'; m.textContent = 'Bitte kreuze an, ob du zufrieden bist (oui / non).'; return; }
     $('fertig').disabled = true; m.className = 'meldung'; m.textContent = 'Wird gesendet …';

@@ -6,6 +6,12 @@
   const FARBEN = ['#1F7A4D', '#7BB662', '#F2A541', '#E2383F'];   // ++ + – – –
   const MERK = 'auswertung-' + B.id;
   const mitZufrieden = B.zufrieden !== false;
+  // Bögen aus der Item-Bank (03.11.2026): Skalen-Aussagen aus B.abschnitte, dazu Diagramme für Wahl-Fragen und Lernweg
+  const BAUSTEINE = B.abschnitte ? B.abschnitte.flatMap(a => a.items) : [];
+  if (B.abschnitte) B.aussagen = B.abschnitte.flatMap(a => a.items.filter(x => x.typ === 'skala').map(x => [a.titel, x.text]));
+  const WAHLEN = BAUSTEINE.filter(x => x.id && (x.optionen || x.wege || []).length);
+  const TEXTE = BAUSTEINE.filter(x => x.id && (x.typ === 'offen' || x.typ === 'lernweg' || x.nachfrage || x.sonstiges));
+  const kurzfrage = x => (x.frage || '').replace(/\*\*/g, '').split(/[.?:]/)[0];
   const da = id => !!$(id);
   document.title = 'Auswertung · ' + B.titel + ' · ' + B.untertitel;
   $('titel').innerHTML = `Auswertung · ${esc(B.titel)}<small>${esc(B.untertitel)}</small>`;
@@ -46,10 +52,12 @@
   };
   $('leeren').onclick = () => { if (confirm('Alle eingelesenen Antworten aus diesem Browser entfernen?')) { antworten = []; merken(); zeichnen(); } };
   $('csv').onclick = () => {
-    const kopf = ['Vorname', 'Klasse', 'Gruppe', 'Zeit', ...B.aussagen.map((a, i) => `${i + 1} ${a[0]}`), 'zufrieden', 'oui weil', 'non weil', 'Sonstiges', 'brauche', 'brauche frei', 'nächstes Mal', 'Vorsatz', 'Vorsatz Sonstiges'];
+    const kopf = ['Vorname', 'Klasse', 'Gruppe', 'Zeit', ...B.aussagen.map((a, i) => `${i + 1} ${a[0]}`), 'zufrieden', 'oui weil', 'non weil', 'Sonstiges', 'brauche', 'brauche frei', 'nächstes Mal', 'Vorsatz', 'Vorsatz Sonstiges',
+      ...WAHLEN.map(kurzfrage), ...TEXTE.map(x => kurzfrage(x) + ' (Text)')];
     const zelle = v => '"' + String(v == null ? '' : v).replace(/"/g, '""') + '"';
     const L = x => (x || []).join('; ');
-    const zeilen = antworten.map(d => [d.name, d.klasse, d.gruppe, d.zeit, ...d.stufen.map(v => B.skala[3 - v] ? B.skala[3 - v][0] : ''), d.zufrieden, L(d.ja), L(d.nein), d.sonstGrund, L(d.brauche), [...Object.values(d.frei || {}), d.braucheSonst].filter(Boolean).join('; '), d.naechstes, L(d.vorsatz), d.vorsatzSonst]);
+    const zeilen = antworten.map(d => [d.name, d.klasse, d.gruppe, d.zeit, ...d.stufen.map(v => B.skala[3 - v] ? B.skala[3 - v][0] : ''), d.zufrieden, L(d.ja), L(d.nein), d.sonstGrund, L(d.brauche), [...Object.values(d.frei || {}), d.braucheSonst].filter(Boolean).join('; '), d.naechstes, L(d.vorsatz), d.vorsatzSonst,
+      ...WAHLEN.map(x => [].concat((d.wahl || {})[x.id] || []).join('; ')), ...TEXTE.map(x => (d.text || {})[x.id] || '')]);
     const a = document.createElement('a');
     a.href = URL.createObjectURL(new Blob(['﻿' + [kopf, ...zeilen].map(z => z.map(zelle).join(';')).join('\n')], { type: 'text/csv' }));
     a.download = `auswertung-${B.id}.csv`; a.click();
@@ -95,7 +103,12 @@
     if (da('gruende-ja')) diagramm('gruende-ja', balkenCfg(zaehlen('ja', B.ja), GRUEN));
     if (da('gruende-nein')) diagramm('gruende-nein', balkenCfg(zaehlen('nein', B.nein), ROT));
     if (da('vorsatz') && B.vorsatz) diagramm('vorsatz', balkenCfg(zaehlen('vorsatz', B.vorsatz), GRUEN));
-    diagramm('brauche', balkenCfg(zaehlen('brauche', B.brauche), NAVY));
+    if (B.brauche && da('brauche')) diagramm('brauche', balkenCfg(zaehlen('brauche', B.brauche), NAVY));
+    if (da('extra')) {
+      $('extra').innerHTML = WAHLEN.map(x => `<section class="karte"><h2>${esc(kurzfrage(x))}</h2><div class="dg" style="height:${(x.optionen || x.wege).length * 34 + 50}px"><canvas id="x-${x.id}"></canvas></div></section>`).join('');
+      WAHLEN.forEach(x => { const m = {}; (x.optionen || x.wege).forEach(o => m[o.replace(/\*\*/g, '')] = antworten.filter(d => [].concat((d.wahl || {})[x.id] || []).includes(o)).length);
+        diagramm('x-' + x.id, balkenCfg(m, x.typ === 'lernweg' ? GRUEN : NAVY)); });
+    }
     // Einzelprofile (kleine Netzdiagramme)
     Object.keys(diagramme).filter(k => k.startsWith('p-')).forEach(k => { diagramme[k].destroy(); delete diagramme[k]; });
     const sortiert = antworten.slice().sort((x, y) => (x.name || '').localeCompare(y.name || ''));
@@ -114,7 +127,8 @@
       + (mitZufrieden ? `<div class="kachel"><b>${Math.round(ja / n * 100)} %</b><span>zufrieden (oui)</span></div>` : '')
       + `<div class="kachel"><b>${(gesamt / 3 * 100).toFixed(0)} %</b><span>Selbsteinschätzung gesamt<br>(100 % = alles „++“)</span></div>`;
     zeichnenDiagramme(n, ja);
-    const ft = d => [d.naechstes, ...Object.values(d.frei || {}).map(v => 'Grammatik: ' + v), d.braucheSonst && 'brauche: ' + d.braucheSonst, d.vorsatzSonst && 'Vorsatz: ' + d.vorsatzSonst].filter(Boolean);
+    const ft = d => [d.naechstes, ...Object.values(d.frei || {}).map(v => 'Grammatik: ' + v), d.braucheSonst && 'brauche: ' + d.braucheSonst, d.vorsatzSonst && 'Vorsatz: ' + d.vorsatzSonst,
+      ...TEXTE.filter(x => (d.text || {})[x.id]).map(x => kurzfrage(x) + ': ' + d.text[x.id])].filter(Boolean);
     const frei = antworten.filter(d => ft(d).length || d.sonstGrund);
     $('frei').innerHTML = frei.length ? frei.map(d => `<li><b>${esc(d.name)}:</b> ${ft(d).map(esc).join(' · ')}${d.sonstGrund ? ` <i>(Sonstiges: ${esc(d.sonstGrund)})</i>` : ''}</li>`).join('') : '<li class="hinweis">Keine Freitexte.</li>';
     $('tabelle').innerHTML = `<tr><th>Vorname</th>${B.gruppen ? '<th>Gr.</th>' : ''}${B.aussagen.map((_, i) => `<th title="${esc(B.aussagen[i][1])}">${i + 1}</th>`).join('')}${mitZufrieden ? '<th>zufrieden</th>' : ''}</tr>`
